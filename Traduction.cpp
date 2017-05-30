@@ -8,11 +8,33 @@ using namespace std;
 
 Traduction::Traduction()
 {
-	adresse_bdd_strings = "bdd/VenomTweaks_strings.xml";
-	adresse_bdd_arrays = "bdd/VenomTweaks_arrays.xml";
+	adresse_bdd_strings = "bdd/VenomTweaks_fr_strings.xml";
+	adresse_bdd_arrays = "bdd/VenomTweaks_fr_arrays.xml";
 }
 
 int Traduction::InStrVector(string elem, vector<string> dans)
+{
+	for (int i = 0; i < dans.size(); i++)
+	{
+		if (dans[i] == elem)
+			return i;
+	}
+	return -1;
+}
+
+bool operator==(vector<QString> a, vector<QString>b)
+{
+	if (a.size() != b.size())
+		return false;
+	for (int i = 0; i < a.size(); i++)
+	{
+		if (a[i] != b[i])
+			return false;
+	}
+	return true;
+}
+
+int Traduction::InQString2xVector(vector<QString> elem, vector<vector<QString>> dans)
 {
 	for (int i = 0; i < dans.size(); i++)
 	{
@@ -107,7 +129,7 @@ vector<vector<string>> Traduction::lecture_xml_typeStrings(string adresse_xml)
 			{
 				temp += ligne[i];
 			}
-			temp += "@RetourLigne@";
+			temp += "@@";
 			do 
 			{
 				temp1 = "";
@@ -132,7 +154,7 @@ vector<vector<string>> Traduction::lecture_xml_typeStrings(string adresse_xml)
 					{
 						temp += ligne[i];
 					}
-					temp += "@RetourLigne@";
+					temp += "@@";
 				}
 				compt = 0;
 			} while (temp1 != "</string>");
@@ -326,6 +348,10 @@ void Traduction::setPosString(int pos)
 
 QString Traduction::setTraductionString(QString trad, bool question)
 {
+	if (trad == "" || encours_liste_strings_trad[pos_strings] == trad.toStdString())
+	{
+		return "";
+	}
 	if (question)
 	{
 		int temp = InStrVector(encours_liste_strings_fonctions[pos_strings], bdd_liste_strings_fonctions);
@@ -371,4 +397,124 @@ void Traduction::setPosArrays(int pos)
 		pos_arrays = 0;
 	else if (pos_arrays >= encours_liste_arrays_fonctions.size())
 		pos_arrays = encours_liste_arrays_fonctions.size() - 1;
+}
+
+bool Traduction::setTraductionArrays(vector<QString> trad, bool question)
+{
+	vector<string> trad_string;
+	for (int i = 0; i < trad.size(); i++)
+	{
+		trad_string.push_back(trad[i].toStdString());
+	}
+
+	if (encours_liste_arrays_trad[pos_arrays] == trad_string)
+	{
+		return false;
+	}
+
+	if (question)
+	{
+		int temp = InStrVector(encours_liste_arrays_fonctions[pos_arrays], bdd_liste_arrays_fonctions);
+		bdd_liste_arrays_fonctions[temp] = encours_liste_arrays_fonctions[pos_arrays];
+		bdd_liste_arrays_trad[temp] = encours_liste_arrays_trad[pos_arrays];
+		encours_liste_arrays_trad[pos_arrays] = trad_string;
+		return false;
+	}
+
+	if (InStrVector(encours_liste_arrays_fonctions[pos_arrays], bdd_liste_arrays_fonctions) == -1)
+	{
+		bdd_liste_arrays_fonctions.push_back(encours_liste_arrays_fonctions[pos_arrays]);
+		bdd_liste_arrays_trad.push_back(trad_string);
+		encours_liste_arrays_trad[pos_arrays] = trad_string;
+		return false;
+	}
+	else
+	{
+		return true;
+	}
+}
+
+bool Traduction::enregistrementStrings(string adresseavecnom, vector<string> fonctions, vector<string> trad)
+{
+	ofstream fichier(adresseavecnom.c_str());
+	if (fichier)
+	{
+		string temp;
+		bool antierreur;
+		fichier << "<?xml version=\"1.0\" encoding=\"utf-8\"?>" << endl << "<resources>" << endl;
+		for (int i = 0; i < fonctions.size(); i++)
+		{
+			fichier << "    <string name=\"" << fonctions[i] << "\">";
+			temp = "";
+			antierreur = false;
+			for (int j = 0; j < trad[i].size()-1; j++)
+			{
+				if (trad[i][j] == '@' && trad[i][j + 1] == '@')
+				{
+					trad[i].erase(trad[i].begin()+j);
+					//trad[i].erase(trad[i].begin() + j + 1);
+					fichier << temp << endl;
+					temp = "";
+					antierreur = true;
+				}
+				else
+				{
+					temp.push_back(trad[i][j]);
+				}
+			}
+			if (!antierreur)
+			{
+				temp.push_back(trad[i][trad[i].size() - 1]);
+			}
+			fichier << temp << "</string>" << endl;
+		}
+		fichier << "</resources>";
+		fichier.close();
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool Traduction::enregistrementArrays(string adresseavecnom, vector<string> fonctions, vector<vector<string>> trad, vector<string> notrad)
+{
+	ofstream fichier(adresseavecnom.c_str());
+	if (fichier)
+	{
+		string temp;
+		bool antierreur;
+		fichier << "<?xml version=\"1.0\" encoding=\"utf-8\"?>" << endl << "<resources>" << endl;
+		for (int i = 0; i < notrad.size(); i++)
+		{
+			fichier << notrad[i] << endl;
+		}
+		for (int i = 0; i < fonctions.size(); i++)
+		{
+			fichier << "    <string-array name=\"" << fonctions[i] << "\">" << endl;
+			for (int j = 0; j < trad[i].size(); j++)
+			{
+				fichier << "        <item>" << trad[i][j] << "</item>" << endl;
+			}
+			fichier << temp << "    </string-array>" << endl;
+		}
+		fichier << "</resources>";
+		fichier.close();
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+void Traduction::enregistrementStringxml(string adresse)
+{
+	enregistrementStrings(adresse, encours_liste_strings_fonctions, encours_liste_strings_trad);
+}
+
+void Traduction::enregistrementArraysxml(string adresse)
+{
+	enregistrementArrays(adresse, encours_liste_arrays_fonctions, encours_liste_arrays_trad, liste_arrays_trad_notrad);
 }

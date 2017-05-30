@@ -33,6 +33,10 @@ public slots:
 
 	void arraysLigneSuiv();
 
+	void enregistrementsDansApk();
+
+	void enregistrementsSous();
+
 	void addLigneDOrigine(int ligneSelect);
 
 private:

@@ -11,6 +11,7 @@ class Traduction
 public:
 	Traduction();
 	int InStrVector(std::string elem, std::vector<std::string> dans);
+	int InQString2xVector(std::vector<QString> elem, std::vector<std::vector<QString>> dans);
 	void setAdresseApk(QString adresse);
 	bool traitement_ouverture_apk();
 
@@ -36,6 +37,16 @@ public:
 	std::vector<QString> getArraysLignesATraduire();
 
 	void setPosArrays(int pos);
+
+	bool setTraductionArrays(std::vector<QString> trad, bool question);
+
+	bool enregistrementStrings(std::string adresse, std::vector<std::string> fonctions, std::vector<std::string> trad);
+
+	bool enregistrementArrays(std::string adresseavecnom, std::vector<std::string> fonctions, std::vector<std::vector<std::string>> trad, std::vector<std::string> notrad);
+
+	void enregistrementStringxml(std::string adresse);
+
+	void enregistrementArraysxml(std::string adresse);
 
 private:
 	QString adresse_dossier_apk;

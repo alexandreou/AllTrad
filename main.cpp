@@ -15,6 +15,14 @@ int main(int argc, char *argv[])
 /*
 Changelog :
 
+v0.6
+Bug corrigé.
+Protection contre l'ajout de traduction "vide" pour strings.xml ajouté.
+Protection contre l'ajout de traduction "vide" pour arrays.xml ajouté.
+Enregistrement des fichiers strings.xml et arrays.xml ajouté et corrigé.
+Bouton Enregistrer fichiers pour recompilation fonctionnel.
+Bouton Enregistrer sous fonctionnel.
+
 v0.5
 Fonction de la partie arrays ajoutées.
 Bug au niveau de la QListWidget non resolu.

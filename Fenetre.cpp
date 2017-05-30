@@ -30,8 +30,11 @@ Fenetre::Fenetre()
 	QLabel *labelLigneDorigine = new QLabel("Ligne d'origine");
 	QLabel *labelLigneTraduite = new QLabel("Traduction");
 	fonctionATraduite = new QLineEdit;
+	fonctionATraduite->setReadOnly(true);
 	ligneDorigine = new QLineEdit;
+	ligneDorigine->setReadOnly(true);
 	ligneTraduite = new QLineEdit;
+	
 	QPushButton *lignePrec = new QPushButton("< Ligne précédante");
 	QPushButton *ligneSuiv = new QPushButton("Valider / Ligne suivante >");
 	QPushButton *tradNonTrouv = new QPushButton("Passer / Traduction non trouvée >");
@@ -40,10 +43,12 @@ Fenetre::Fenetre()
 	QGridLayout *layoutPage2 = new QGridLayout;
 	QLabel *labelMenuATraduite = new QLabel("Menu à traduire");
 	menuATraduite = new QLineEdit;
+	menuATraduite->setReadOnly(true);
 	lignesDuMenu = new QListWidget;
 	QLabel *labelLigneDorigineM = new QLabel("Ligne d'origine");
 	QLabel *labelLigneTraduiteM = new QLabel("Traduction");
 	ligneDorigineM = new QLineEdit;
+	ligneDorigineM->setReadOnly(true);
 	ligneTraduiteM = new QLineEdit;
 	QPushButton *validerM = new QPushButton("Valider la traduction de la ligne");
 	QPushButton *lignePrecM = new QPushButton("< Menu précédant");
@@ -53,6 +58,7 @@ Fenetre::Fenetre()
 	infoSuppApk->setContentsMargins(0, 20, 0, 0);
 	QLabel *labelAdresseApk = new QLabel("Adresse de l'apk d'origine");
 	adresseApk = new QLineEdit;
+	adresseApk->setReadOnly(true);
 
 	QGridLayout *boutonsSuppl = new QGridLayout;
 	QPushButton *autre1 = new QPushButton;
@@ -123,11 +129,14 @@ Fenetre::Fenetre()
 	connect(validerM, SIGNAL(clicked()), this, SLOT(ajouterTradLigneArrays()));
 	connect(lignePrecM, SIGNAL(clicked()), this, SLOT(arraysLignePrec()));
 	connect(ligneSuivM, SIGNAL(clicked()), this, SLOT(arraysLigneSuiv()));
+	connect(enregistrerApk, SIGNAL(clicked()), this, SLOT(enregistrementsDansApk()));
+	connect(enregistrerFichiers, SIGNAL(clicked()), this, SLOT(enregistrementsSous()));
 }
 
 void Fenetre::actualiserMenu()
 {
-	while(lignesDuMenu->count() > 0)
+	int temp = lignesDuMenu->count();
+	for(int i = 0; i < temp-1; i++)
 	{
 		lignesDuMenu->removeItemWidget(lignesDuMenu->takeItem(0));
 	}
@@ -144,7 +153,7 @@ void Fenetre::addLigneDOrigine(int ligneSelect)
 
 void Fenetre::getDossierApk()
 {
-	QString dossier = QFileDialog::getExistingDirectory(this);
+	QString dossier = QFileDialog::getExistingDirectory(this, "Ouvrir un .apk décompilé");
 	t.setAdresseApk(dossier);
 	bool reussite = t.traitement_ouverture_apk();
 	t.creationEncours();
@@ -174,6 +183,8 @@ void Fenetre::btraduireAvecBdd()
 	menuATraduite->setText(t.getArraysFonctionATraduire());
 	lignesDansMenu = t.getArraysLignesATraduire();
 	actualiserMenu();
+	lignesDuMenu->removeItemWidget(lignesDuMenu->takeItem(0));
+	addLigneDOrigine(0);
 }
 
 void Fenetre::stringLignePrec()
@@ -188,7 +199,7 @@ void Fenetre::stringLigneSuiv()
 	QString temp = t.setTraductionString(ligneTraduite->text(), false);
 	if (temp != "")
 	{
-		int reponse = QMessageBox::question(this, "Doublon", "Une autre traduction a été trouvé dans la base de donnée.\nVoulez-vous remplacer la traduction de la base de donnée ?", QMessageBox::Yes | QMessageBox::No);
+		int reponse = QMessageBox::question(this, "Doublon", "Une autre traduction a été trouvé dans la base de donnée.\nVoulez-vous remplacer la traduction de la base de donnée ?\n\nTraduction de la base de donnée : "+temp+"\nVotre traduction : "+ ligneTraduite->text(), QMessageBox::Yes | QMessageBox::No);
 		if (reponse == QMessageBox::Yes)
 		{
 			temp = t.setTraductionString(ligneTraduite->text(), true);
@@ -209,11 +220,14 @@ void Fenetre::stringLigneNoTrad()
 
 void Fenetre::ajouterTradLigneArrays()
 {
-	lignesDansMenu[lignesDuMenu->currentRow()] = ligneTraduiteM->text();
-	lignesDuMenu->removeItemWidget(lignesDuMenu->takeItem(lignesDuMenu->currentRow()));
-	lignesDuMenu->insertItem(lignesDuMenu->currentRow(), ligneTraduiteM->text());
-	lignesDuMenu->item(lignesDuMenu->currentRow()-1)->setBackgroundColor("#50FF50");
-	ligneTraduiteM->setText("");
+	if (ligneTraduiteM->text() != "")
+	{
+		lignesDansMenu[lignesDuMenu->currentRow()] = ligneTraduiteM->text();
+		lignesDuMenu->removeItemWidget(lignesDuMenu->takeItem(lignesDuMenu->currentRow()));
+		lignesDuMenu->insertItem(lignesDuMenu->currentRow(), ligneTraduiteM->text());
+		lignesDuMenu->item(lignesDuMenu->currentRow() - 1)->setBackgroundColor("#50FF50");
+		ligneTraduiteM->setText("");
+	}
 	if(lignesDuMenu->currentRow() < lignesDansMenu.size())
 		lignesDuMenu->setCurrentRow(lignesDuMenu->currentRow());
 }
@@ -224,12 +238,38 @@ void Fenetre::arraysLignePrec()
 	menuATraduite->setText(t.getArraysFonctionATraduire());
 	lignesDansMenu = t.getArraysLignesATraduire();
 	actualiserMenu();
+	lignesDuMenu->removeItemWidget(lignesDuMenu->takeItem(0));
+	addLigneDOrigine(0);
 }
 
 void Fenetre::arraysLigneSuiv()
 {
+	bool temp = t.setTraductionArrays(lignesDansMenu, false);
+	if (temp)
+	{
+		int reponse = QMessageBox::question(this, "Doublon", "Une autre traduction a été trouvé dans la base de donnée.\nVoulez-vous remplacer la traduction de la base de donnée ?", QMessageBox::Yes | QMessageBox::No);
+		if (reponse == QMessageBox::Yes)
+		{
+			temp = t.setTraductionArrays(lignesDansMenu, true);
+		}
+	}
 	t.setPosArrays(+1);
 	menuATraduite->setText(t.getArraysFonctionATraduire());
 	lignesDansMenu = t.getArraysLignesATraduire();
 	actualiserMenu();
+	lignesDuMenu->removeItemWidget(lignesDuMenu->takeItem(0));
+	addLigneDOrigine(0);
+}
+
+void Fenetre::enregistrementsDansApk()
+{
+	t.enregistrementStringxml(adresseApk->text().toStdString()+"/res/values-fr/strings.xml");
+	t.enregistrementArraysxml(adresseApk->text().toStdString() + "/res/values-fr/arrays.xml");
+}
+
+void Fenetre::enregistrementsSous()
+{
+	QString dossier = QFileDialog::getExistingDirectory(this, "Dossier d'enregistrement des fichiers arrays.xml et strings.xml traduits");
+	t.enregistrementStringxml(dossier.toStdString() + "/strings.xml");
+	t.enregistrementArraysxml(dossier.toStdString() + "/arrays.xml");
 }
