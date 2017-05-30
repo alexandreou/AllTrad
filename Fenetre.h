@@ -3,6 +3,7 @@
 #define HEADER_FENETRE
 
 #include <QtWidgets>
+#include <vector>
 #include "Traduction.h"
 
 class Fenetre : public QMainWindow
@@ -12,6 +13,7 @@ class Fenetre : public QMainWindow
 
 public:
 	Fenetre();
+	void actualiserMenu();
 
 public slots:
 	void getDossierApk();
@@ -25,6 +27,13 @@ public slots:
 
 	void stringLigneNoTrad();
 
+	void ajouterTradLigneArrays();
+
+	void arraysLignePrec();
+
+	void arraysLigneSuiv();
+
+	void addLigneDOrigine(int ligneSelect);
 
 private:
 	Traduction t;
@@ -32,7 +41,11 @@ private:
 	QLineEdit *ligneDorigine;
 	QLineEdit *ligneTraduite;
 	QLineEdit *adresseApk;
-
+	QLineEdit *menuATraduite;
+	QLineEdit *ligneDorigineM;
+	QLineEdit *ligneTraduiteM;
+	QListWidget *lignesDuMenu;
+	std::vector<QString> lignesDansMenu;
 };
 
 #endif

@@ -261,6 +261,8 @@ void Traduction::creationEncours()
 	pos_arrays = 0;
 	encours_liste_strings_fonctions = {};
 	encours_liste_strings_trad = {};
+	encours_liste_arrays_fonctions = {};
+	encours_liste_arrays_trad = {};
 
 	for (int i = 0; i < liste_strings_fonctions.size(); i++)
 	{
@@ -320,4 +322,53 @@ void Traduction::setPosString(int pos)
 		pos_strings = 0;
 	else if(pos_strings >= encours_liste_strings_fonctions.size())
 		pos_strings = encours_liste_strings_fonctions.size() - 1;
+}
+
+QString Traduction::setTraductionString(QString trad, bool question)
+{
+	if (question)
+	{
+		int temp = InStrVector(encours_liste_strings_fonctions[pos_strings], bdd_liste_strings_fonctions);
+		bdd_liste_strings_fonctions[temp] = encours_liste_strings_fonctions[pos_strings];
+		bdd_liste_strings_trad[temp] = encours_liste_strings_trad[pos_strings];
+		encours_liste_strings_trad[pos_strings] = trad.toStdString();
+		return "";
+	}
+
+	if (InStrVector(encours_liste_strings_fonctions[pos_strings], bdd_liste_strings_fonctions) == -1)
+	{
+		bdd_liste_strings_fonctions.push_back(encours_liste_strings_fonctions[pos_strings]);
+		bdd_liste_strings_trad.push_back(trad.toStdString());
+		encours_liste_strings_trad[pos_strings] = trad.toStdString();
+		return "";
+	}
+	else
+	{
+		return QString::fromStdString(encours_liste_strings_trad[pos_strings]);
+	}
+}
+
+QString Traduction::getArraysFonctionATraduire()
+{
+	return QString::fromStdString(encours_liste_arrays_fonctions[pos_arrays]);
+}
+
+vector<QString> Traduction::getArraysLignesATraduire()
+{
+	vector<string> temp = encours_liste_arrays_trad[pos_arrays];
+	vector<QString> temp1;
+	for (int i = 0; i < temp.size(); i++)
+	{
+		temp1.push_back(QString::fromStdString(temp[i]));
+	}
+	return temp1;
+}
+
+void Traduction::setPosArrays(int pos)
+{
+	pos_arrays += pos;
+	if (pos_arrays < 0)
+		pos_arrays = 0;
+	else if (pos_arrays >= encours_liste_arrays_fonctions.size())
+		pos_arrays = encours_liste_arrays_fonctions.size() - 1;
 }

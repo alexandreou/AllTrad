@@ -5,7 +5,6 @@
 
 Fenetre::Fenetre()
 {
-	Traduction t;
 	QWidget *zoneCentrale = new QWidget;
 	QGridLayout *layoutPrincipal = new QGridLayout;
 
@@ -40,14 +39,15 @@ Fenetre::Fenetre()
 	QWidget *page2 = new QWidget;
 	QGridLayout *layoutPage2 = new QGridLayout;
 	QLabel *labelMenuATraduite = new QLabel("Menu à traduire");
-	QLineEdit *menuATraduite = new QLineEdit;
-	QListWidget *lignesDuMenu = new QListWidget;
+	menuATraduite = new QLineEdit;
+	lignesDuMenu = new QListWidget;
 	QLabel *labelLigneDorigineM = new QLabel("Ligne d'origine");
 	QLabel *labelLigneTraduiteM = new QLabel("Traduction");
-	QLineEdit *ligneDorigineM = new QLineEdit;
-	QLineEdit *ligneTraduiteM = new QLineEdit;
-	QPushButton *lignePrecM = new QPushButton("< Ligne précédante");
-	QPushButton *ligneSuivM = new QPushButton("Valider / Ligne suivante >");
+	ligneDorigineM = new QLineEdit;
+	ligneTraduiteM = new QLineEdit;
+	QPushButton *validerM = new QPushButton("Valider la traduction de la ligne");
+	QPushButton *lignePrecM = new QPushButton("< Menu précédant");
+	QPushButton *ligneSuivM = new QPushButton("Valider / Menu suivant >");
 
 	QGridLayout *infoSuppApk = new QGridLayout;
 	infoSuppApk->setContentsMargins(0, 20, 0, 0);
@@ -83,13 +83,14 @@ Fenetre::Fenetre()
 
 	layoutPage2->addWidget(labelMenuATraduite, 0, 1);
 	layoutPage2->addWidget(menuATraduite, 0, 2);
-	layoutPage2->addWidget(lignesDuMenu, 0, 0, 4, 1);
+	layoutPage2->addWidget(lignesDuMenu, 0, 0, 5, 1);
 	layoutPage2->addWidget(labelLigneDorigineM, 1, 1);
 	layoutPage2->addWidget(labelLigneTraduiteM, 2, 1);
 	layoutPage2->addWidget(ligneDorigineM, 1, 2);
 	layoutPage2->addWidget(ligneTraduiteM, 2, 2);
-	layoutPage2->addWidget(lignePrecM, 3, 1);
-	layoutPage2->addWidget(ligneSuivM, 3, 2);
+	layoutPage2->addWidget(validerM, 3, 1, 1, 2);
+	layoutPage2->addWidget(lignePrecM, 4, 1);
+	layoutPage2->addWidget(ligneSuivM, 4, 2);
 	page2->setLayout(layoutPage2);
 
 	onglets->addTab(page1, "string.xml");
@@ -118,6 +119,27 @@ Fenetre::Fenetre()
 	connect(lignePrec, SIGNAL(clicked()), this, SLOT(stringLignePrec()));
 	connect(ligneSuiv, SIGNAL(clicked()), this, SLOT(stringLigneSuiv()));
 	connect(tradNonTrouv, SIGNAL(clicked()), this, SLOT(stringLigneNoTrad()));
+	connect(lignesDuMenu, SIGNAL(currentRowChanged(int)), this, SLOT(addLigneDOrigine(int)));
+	connect(validerM, SIGNAL(clicked()), this, SLOT(ajouterTradLigneArrays()));
+	connect(lignePrecM, SIGNAL(clicked()), this, SLOT(arraysLignePrec()));
+	connect(ligneSuivM, SIGNAL(clicked()), this, SLOT(arraysLigneSuiv()));
+}
+
+void Fenetre::actualiserMenu()
+{
+	while(lignesDuMenu->count() > 0)
+	{
+		lignesDuMenu->removeItemWidget(lignesDuMenu->takeItem(0));
+	}
+	for (int i = 0; i < lignesDansMenu.size(); i++)
+	{
+		lignesDuMenu->addItem(lignesDansMenu[i]);
+	}
+}
+
+void Fenetre::addLigneDOrigine(int ligneSelect)
+{
+	ligneDorigineM->setText(lignesDansMenu[ligneSelect]);
 }
 
 void Fenetre::getDossierApk()
@@ -128,6 +150,11 @@ void Fenetre::getDossierApk()
 	t.creationEncours();
 	fonctionATraduite->setText(t.getStringsFonctionATraduire());
 	ligneDorigine->setText(t.getStringsLigneDOrigine());
+
+	menuATraduite->setText(t.getArraysFonctionATraduire());
+	lignesDansMenu = t.getArraysLignesATraduire();
+	actualiserMenu();
+
 	adresseApk->setText(dossier);
 }
 
@@ -144,6 +171,9 @@ void Fenetre::btraduireAvecBdd()
 	t.creationEncours();
 	fonctionATraduite->setText(t.getStringsFonctionATraduire());
 	ligneDorigine->setText(t.getStringsLigneDOrigine());
+	menuATraduite->setText(t.getArraysFonctionATraduire());
+	lignesDansMenu = t.getArraysLignesATraduire();
+	actualiserMenu();
 }
 
 void Fenetre::stringLignePrec()
@@ -155,7 +185,17 @@ void Fenetre::stringLignePrec()
 
 void Fenetre::stringLigneSuiv()
 {
+	QString temp = t.setTraductionString(ligneTraduite->text(), false);
+	if (temp != "")
+	{
+		int reponse = QMessageBox::question(this, "Doublon", "Une autre traduction a été trouvé dans la base de donnée.\nVoulez-vous remplacer la traduction de la base de donnée ?", QMessageBox::Yes | QMessageBox::No);
+		if (reponse == QMessageBox::Yes)
+		{
+			temp = t.setTraductionString(ligneTraduite->text(), true);
+		}
+	}
 	t.setPosString(+1);
+	ligneTraduite->setText("");
 	fonctionATraduite->setText(t.getStringsFonctionATraduire());
 	ligneDorigine->setText(t.getStringsLigneDOrigine());
 }
@@ -165,4 +205,31 @@ void Fenetre::stringLigneNoTrad()
 	t.setPosString(+1);
 	fonctionATraduite->setText(t.getStringsFonctionATraduire());
 	ligneDorigine->setText(t.getStringsLigneDOrigine());
+}
+
+void Fenetre::ajouterTradLigneArrays()
+{
+	lignesDansMenu[lignesDuMenu->currentRow()] = ligneTraduiteM->text();
+	lignesDuMenu->removeItemWidget(lignesDuMenu->takeItem(lignesDuMenu->currentRow()));
+	lignesDuMenu->insertItem(lignesDuMenu->currentRow(), ligneTraduiteM->text());
+	lignesDuMenu->item(lignesDuMenu->currentRow()-1)->setBackgroundColor("#50FF50");
+	ligneTraduiteM->setText("");
+	if(lignesDuMenu->currentRow() < lignesDansMenu.size())
+		lignesDuMenu->setCurrentRow(lignesDuMenu->currentRow());
+}
+
+void Fenetre::arraysLignePrec()
+{
+	t.setPosArrays(-1);
+	menuATraduite->setText(t.getArraysFonctionATraduire());
+	lignesDansMenu = t.getArraysLignesATraduire();
+	actualiserMenu();
+}
+
+void Fenetre::arraysLigneSuiv()
+{
+	t.setPosArrays(+1);
+	menuATraduite->setText(t.getArraysFonctionATraduire());
+	lignesDansMenu = t.getArraysLignesATraduire();
+	actualiserMenu();
 }

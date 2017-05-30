@@ -14,6 +14,11 @@ int main(int argc, char *argv[])
 
 /*
 Changelog :
+
+v0.5
+Fonction de la partie arrays ajoutées.
+Bug au niveau de la QListWidget non resolu.
+
 v0.4
 Suppression de la partie "Nom de l'apk".
 Ajout de la partie arrays.xml.

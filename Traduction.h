@@ -29,6 +29,14 @@ public:
 
 	void setPosString(int pos);
 
+	QString setTraductionString(QString trad, bool question);
+
+	QString getArraysFonctionATraduire();
+
+	std::vector<QString> getArraysLignesATraduire();
+
+	void setPosArrays(int pos);
+
 private:
 	QString adresse_dossier_apk;
 	std::string adresse_bdd_strings;
