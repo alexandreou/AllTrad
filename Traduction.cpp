@@ -10,6 +10,8 @@ Traduction::Traduction()
 {
 	adresse_bdd_strings = "bdd/VenomTweaks_fr_strings.xml";
 	adresse_bdd_arrays = "bdd/VenomTweaks_fr_arrays.xml";
+	pos_arrays_fusion = 0;
+	pos_strings_fusion = 0;
 }
 
 int Traduction::InStrVector(string elem, vector<string> dans)
@@ -47,6 +49,31 @@ int Traduction::InQString2xVector(vector<QString> elem, vector<vector<QString>> 
 void Traduction::setAdresseApk(QString adresse)
 {
 	adresse_dossier_apk = adresse;
+	liste_strings_fonctions = {};
+	liste_strings_trad = {};
+
+	liste_arrays_fonctions = {};
+	liste_arrays_trad = {};
+
+	liste_arrays_trad_notrad = {};
+
+
+	bdd_liste_strings_fonctions = {};
+	bdd_liste_strings_trad = {};
+
+	bdd_liste_arrays_fonctions = {};
+	bdd_liste_arrays_trad = {};
+
+	bdd_liste_arrays_trad_notrad = {};
+
+
+	encours_liste_strings_fonctions = {};
+	encours_liste_strings_trad = {};
+	pos_strings = 0;
+
+	liste_arrays_fonctions = {};
+	encours_liste_arrays_trad = {};
+	pos_arrays = 0;
 }
 
 bool Traduction::traitement_ouverture_apk()
@@ -102,8 +129,19 @@ vector<vector<string>> Traduction::lecture_xml_typeStrings(string adresse_xml)
 			compt++;
 			temp_char = ligne[compt];
 		}
+		compt += 1;
+		if (ligne[compt] == ' ')
+		{
+			temp += '\"';
+			for(int i = 0; i < 17; i++)
+				temp += ligne[compt+i];
+			compt += 19;
+		}
+		else
+		{
+			compt += 1;
+		}
 		fonctions.push_back(temp);
-		compt += 2;
 		temp = "";
 		for (int i = ligne.size() - 9; i < ligne.size(); i++)
 		{
@@ -195,20 +233,32 @@ vector<vector<vector<string>>> Traduction::lecture_xml_typeArrays(string adresse
 		else
 		{
 			temp = "";
-			for (int i = ligne.size() - 8; i < ligne.size(); i++)
+			vector<string> filtre = { "values\">", "_icons\">", "_ids\">", "_values_up\">", "values_new\">", "values_elite\">" };
+			bool test = false;
+
+			for (int j = 0; j < filtre.size(); j++)
 			{
-				temp += ligne[i];
-			}
-			if (temp == "values\">")
-			{
-				notrad.push_back(ligne);
-				while (ligne != "    </string-array>")
+				temp = "";
+				if (ligne.size() - filtre[j].size() > 0)
 				{
-					getline(xml, ligne);
-					notrad.push_back(ligne);
+					for (int i = ligne.size() - filtre[j].size(); i < ligne.size(); i++)
+					{
+						temp += ligne[i];
+					}
+					if (temp == filtre[j])
+					{
+						test = true;
+						notrad.push_back(ligne);
+						while (ligne != "    </string-array>")
+						{
+							getline(xml, ligne);
+							notrad.push_back(ligne);
+						}
+					}
 				}
 			}
-			else
+
+			if(!test)
 			{
 				temp = "";
 				compt = 24;
@@ -309,7 +359,7 @@ void Traduction::creationEncours()
 	for (int i = 0; i < liste_arrays_fonctions.size(); i++)
 	{
 		temp = InStrVector(liste_arrays_fonctions[i], bdd_liste_arrays_fonctions);
-		if (temp != -1)
+		if (temp != -1 && bdd_liste_arrays_trad[temp].size() == liste_arrays_trad[i].size())
 		{
 			encours_liste_arrays_fonctions.push_back(bdd_liste_arrays_fonctions[temp]);
 			encours_liste_arrays_trad.push_back(bdd_liste_arrays_trad[temp]);
@@ -478,7 +528,7 @@ bool Traduction::enregistrementStrings(string adresseavecnom, vector<string> fon
 	}
 }
 
-bool Traduction::enregistrementArrays(string adresseavecnom, vector<string> fonctions, vector<vector<string>> trad, vector<string> notrad)
+bool Traduction::enregistrementArrays(string adresseavecnom, vector<string> fonctions, vector<vector<string>> trad, vector<string> notrad, bool mettrenotrad)
 {
 	ofstream fichier(adresseavecnom.c_str());
 	if (fichier)
@@ -486,9 +536,12 @@ bool Traduction::enregistrementArrays(string adresseavecnom, vector<string> fonc
 		string temp;
 		bool antierreur;
 		fichier << "<?xml version=\"1.0\" encoding=\"utf-8\"?>" << endl << "<resources>" << endl;
-		for (int i = 0; i < notrad.size(); i++)
+		if (mettrenotrad)
 		{
-			fichier << notrad[i] << endl;
+			for (int i = 0; i < notrad.size(); i++)
+			{
+				fichier << notrad[i] << endl;
+			}
 		}
 		for (int i = 0; i < fonctions.size(); i++)
 		{
@@ -516,5 +569,173 @@ void Traduction::enregistrementStringxml(string adresse)
 
 void Traduction::enregistrementArraysxml(string adresse)
 {
-	enregistrementArrays(adresse, encours_liste_arrays_fonctions, encours_liste_arrays_trad, liste_arrays_trad_notrad);
+	enregistrementArrays(adresse, encours_liste_arrays_fonctions, encours_liste_arrays_trad, liste_arrays_trad_notrad, true);
+}
+
+void Traduction::enregistrementBddStringxml(string adresse)
+{
+	enregistrementStrings(adresse, bdd_liste_strings_fonctions, bdd_liste_strings_trad);
+}
+
+void Traduction::enregistrementBddArraysxml(string adresse)
+{
+	enregistrementArrays(adresse, bdd_liste_arrays_fonctions, bdd_liste_arrays_trad, liste_arrays_trad_notrad, false);
+}
+
+int Traduction::totalLigneArrays()
+{
+	return encours_liste_arrays_fonctions.size();
+}
+
+int Traduction::totalLigneStrings()
+{
+	return encours_liste_strings_fonctions.size();
+}
+
+int Traduction::getPosArrays()
+{
+	return pos_arrays;
+}
+
+int Traduction::getPosStrings()
+{
+	return pos_strings;
+}
+
+vector<vector<string>> Traduction::fusionArrays(QString adresseBdd1, QString adresseBdd2, QString adresseEnregistBdd, int reponse)
+{
+	int temp;
+	vector<vector<vector<string>>> bdd1;
+	bdd1 = lecture_xml_typeArrays(adresseBdd1.toStdString());
+	vector<vector<vector<string>>> bdd2;
+	bdd2 = lecture_xml_typeArrays(adresseBdd2.toStdString());
+	vector<string> bdd1fonction, bdd2fonction;
+	vector<vector<string>> bdd1trad, bdd2trad;
+
+	if (bdd1[0][0].size() > bdd2[0][0].size())
+	{
+		bdd1fonction = bdd1[0][0];
+		bdd2fonction = bdd2[0][0];
+		bdd1trad = bdd1[1];
+		bdd2trad = bdd2[1];
+	}
+	else
+	{
+		bdd1fonction = bdd2[0][0];
+		bdd2fonction = bdd1[0][0];
+		bdd1trad = bdd2[1];
+		bdd2trad = bdd1[1];
+	}
+
+	for (int i = pos_arrays_fusion; i < bdd1fonction.size(); i++)
+	{
+		temp = InStrVector(bdd1fonction[i], bdd2fonction);
+		if (reponse == 1)
+		{
+			fusion_liste_arrays_fonctions.push_back(bdd1fonction[temp]);
+			fusion_liste_arrays_trad.push_back(bdd1trad[temp]);
+			reponse = 0;
+		}
+		else if (reponse == 2)
+		{
+			fusion_liste_arrays_fonctions.push_back(bdd2fonction[temp]);
+			fusion_liste_arrays_trad.push_back(bdd2trad[temp]);
+			reponse = 0;
+		}
+		else if (temp != -1)
+		{
+			pos_arrays_fusion = i;
+			return{ { bdd1fonction[i] }, bdd1trad[i], bdd2trad[temp] };
+		}
+	}
+	for (int i = 0; i < bdd1fonction.size(); i++)
+	{
+		temp = InStrVector(bdd1fonction[i], fusion_liste_arrays_fonctions);
+		if (temp == -1)
+		{
+			fusion_liste_arrays_fonctions.push_back(bdd1fonction[i]);
+			fusion_liste_arrays_trad.push_back(bdd1trad[i]);
+		}
+	}
+	for (int i = 0; i < bdd2fonction.size(); i++)
+	{
+		temp = InStrVector(bdd2fonction[i], fusion_liste_arrays_fonctions);
+		if (temp == -1)
+		{
+			fusion_liste_arrays_fonctions.push_back(bdd2fonction[i]);
+			fusion_liste_arrays_trad.push_back(bdd2trad[i]);
+		}
+	}
+	pos_arrays_fusion = 0;
+	enregistrementArrays(adresseEnregistBdd.toStdString(), fusion_liste_arrays_fonctions, fusion_liste_arrays_trad, liste_arrays_trad_notrad, false);
+	return{ {"FFIINN"} };
+}
+
+vector<string> Traduction::fusionStrings(QString adresseBdd1, QString adresseBdd2, QString adresseEnregistBdd, int reponse)
+{
+	int temp;
+	vector<vector<string>> bdd1;
+	bdd1 = lecture_xml_typeStrings(adresseBdd1.toStdString());
+	vector<vector<string>> bdd2;
+	bdd2 = lecture_xml_typeStrings(adresseBdd2.toStdString());
+
+	vector<string> bdd1fonction, bdd2fonction, bdd1trad, bdd2trad;
+
+	if (bdd1[0][0].size() > bdd2[0][0].size())
+	{
+		bdd1fonction = bdd1[0];
+		bdd2fonction = bdd2[0];
+		bdd1trad = bdd1[1];
+		bdd2trad = bdd2[1];
+	}
+	else
+	{
+		bdd1fonction = bdd2[0];
+		bdd2fonction = bdd1[0];
+		bdd1trad = bdd2[1];
+		bdd2trad = bdd1[1];
+	}
+
+	for (int i = pos_strings_fusion; i < bdd1fonction.size(); i++)
+	{
+		temp = InStrVector(bdd1fonction[i], bdd2fonction);
+		if (reponse == 1)
+		{
+			fusion_liste_strings_fonctions.push_back(bdd1fonction[temp]);
+			fusion_liste_strings_trad.push_back(bdd1trad[temp]);
+			reponse = 0;
+		}
+		else if (reponse == 2)
+		{
+			fusion_liste_strings_fonctions.push_back(bdd2fonction[temp]);
+			fusion_liste_strings_trad.push_back(bdd2trad[temp]);
+			reponse = 0;
+		}
+		else if (temp != -1)
+		{
+			pos_strings_fusion = i;
+			return{ { bdd1fonction[i] }, bdd1trad[i], bdd2trad[i] };
+		}
+	}
+	for (int i = 0; i < bdd1fonction.size(); i++)
+	{
+		temp = InStrVector(bdd1fonction[i], fusion_liste_strings_fonctions);
+		if (temp == -1)
+		{
+			fusion_liste_strings_fonctions.push_back(bdd1fonction[i]);
+			fusion_liste_strings_trad.push_back(bdd1trad[i]);
+		}
+	}
+	for (int i = 0; i < bdd2fonction.size(); i++)
+	{
+		temp = InStrVector(bdd2fonction[i], fusion_liste_strings_fonctions);
+		if (temp == -1)
+		{
+			fusion_liste_strings_fonctions.push_back(bdd2fonction[i]);
+			fusion_liste_strings_trad.push_back(bdd2trad[i]);
+		}
+	}
+	pos_strings_fusion = 0;
+	enregistrementStrings(adresseEnregistBdd.toStdString(), fusion_liste_strings_fonctions, fusion_liste_strings_trad);
+	return{ "FFIINN" };
 }
