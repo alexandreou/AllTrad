@@ -1,4 +1,4 @@
-# ViperTradTool
+# AllTrad
 Outil de traduction des applications Venom.
 
 Développé avec Qt 5.8. 
