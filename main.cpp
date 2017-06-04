@@ -6,6 +6,11 @@ int main(int argc, char *argv[])
 {
 	QApplication a(argc, argv);
 
+	QString locale = QLocale::system().name().section('_', 0, 0);
+	QTranslator translator;
+	translator.load(QString("qt_") + locale, QLibraryInfo::location(QLibraryInfo::TranslationsPath));
+	a.installTranslator(&translator);
+
 	Fenetre fenetre;
 	fenetre.show();
 
@@ -14,6 +19,34 @@ int main(int argc, char *argv[])
 
 /*
 Changelog :
+
+v1.0
+Ajout d'une barre de menu.
+Résolution de quelques bugs.
+Correction de fautes d'orthographes.
+Ajout de bulles d'information.
+Ajout de traduction des boites de dialogues de Qt.
+Resolution d'un bug sur les apostrophes.
+Bug avec une ligne strings.xml particulière corrigé.
+Ajout d'un message d'erreur avec les menus si aucun fichier n'est ouvert.
+Message de sortie s'affiche seulement si un travail est en cours.
+Bug lorsqu'il y a des retours lignes dans strings.xml (manque des lettres).
+Ajout de deux bouton dans le sous-programme fusion.
+Multiples corrections dans l'ajout de lignes.
+Bug de séléction pour la partie arrays corrigé.
+Correction d'un bug lors d'un changement d'apk au niveau de arrays.
+
+v0.10
+Résolution d'un bug de fin de traduction.
+Gestion des apostrophes pour apktool.
+Verification des espaces/tabulations pour éviter des bugs.
+Ajout d'un message avant de quitter le programme.
+
+v0.9
+Amélioration des algorithmes de lecture des fichiers strings.xml et arrays.xml (gestion des trous dans les fichiers).
+Compatibilité avec les autres applications Venom.
+Compatibilité avec d'autres langues.
+
 v0.8
 Vérification de la compatiilité d'un menu bdd avec un menu d'origine.
 Fusion de bases de données ajoutée.

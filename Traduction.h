@@ -10,9 +10,11 @@ class Traduction
 {
 public:
 	Traduction();
+	void remplace(std::string & dans);
 	int InStrVector(std::string elem, std::vector<std::string> dans);
 	int InQString2xVector(std::vector<QString> elem, std::vector<std::vector<QString>> dans);
 	void setAdresseApk(QString adresse);
+	void setAdresseFichiers(QString strings, QString arrays);
 	bool traitement_ouverture_apk();
 
 	std::vector<std::vector<std::string>> lecture_xml_typeStrings(std::string adresse_xml);
@@ -42,8 +44,12 @@ public:
 	std::vector<std::vector<std::string>> fusionArrays(QString adresseBdd1, QString adresseBdd2, QString adresseEnregistBdd, int reponse);
 	std::vector<std::string> fusionStrings(QString adresseBdd1, QString adresseBdd2, QString adresseEnregistBdd, int reponse);
 
+	void setNomAppli(std::string nom, std::string langue1);
+
+
 private:
-	QString adresse_dossier_apk;
+	std::string nom_appli;
+	std::string langue;
 	std::string adresse_bdd_strings;
 	std::string adresse_bdd_arrays;
 	std::string adresse_strings;

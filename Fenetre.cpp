@@ -8,38 +8,50 @@ Fenetre::Fenetre()
 {
 	QWidget *zoneCentrale = new QWidget;
 	QGridLayout *layoutPrincipal = new QGridLayout;
+
 	setWindowIcon(QIcon("files/logo.png"));
-	setWindowTitle("All Trad v0.8");
+	setWindowTitle("All Trad v1.0");
+
 	QGridLayout *layoutOption = new QGridLayout;
 	layoutOption->setContentsMargins(0, 0, 0, 20);
 	QPushButton *traduireAvecBdd = new QPushButton("Traduire avec la base de données");
+	traduireAvecBdd->setToolTip("Permet de traduire l'application avec la base de données par défaut ou avec votre base de données.");
 	traduireAvecBdd->setMinimumHeight(40);
 
 	QLabel *logo = new QLabel;
 	logo->setPixmap(QPixmap("files/logo.png"));
+	logo->setAlignment(Qt::AlignCenter);
 
 	QGridLayout *layoutOption1 = new QGridLayout;
 	layoutOption1->setContentsMargins(0, 0, 20, 0);
-	QComboBox *boutonAppliTrad = new QComboBox;
-	boutonAppliTrad->addItem("VenomTweaks.apk");
-	//boutonAppliTrad->addItem("VenomHUB.apk");
-	//boutonAppliTrad->addItem("VenomSideBar.apk");
-	//boutonAppliTrad->addItem("VenomPie.apk");
-	QComboBox *langueVers = new QComboBox;
+	boutonAppliTrad = new QComboBox;
+	boutonAppliTrad->addItem("VenomTweaks");
+	boutonAppliTrad->addItem("VenomHUB");
+	boutonAppliTrad->addItem("VenomSideBar");
+	boutonAppliTrad->addItem("Autre");
+	boutonAppliTrad->setToolTip("Séléctionnez l'application que vous voulez traduire. Si elle n'y est pas, vous pouvez choisir \"Autre\" ou demander à Alexandreou.");
+	langueVers = new QComboBox;
 	langueVers->addItem("Anglais -> Français");
-	//langueVers->addItem("Anglais -> Espagnol");
+	langueVers->addItem("Anglais -> Espagnol");
+	langueVers->addItem("Anglais -> Allemand");
+	langueVers->setToolTip("Séléctionnez la langue dans laquelle vous voulez traduire l'application.");
 	QPushButton *ouvrirApk = new QPushButton("Ouvrir le dossier de l'apk décompilé");
+	ouvrirApk->setToolTip("Ouvrir le dossier du .apk décompilé avec ApkTool.");
 	QPushButton *ouvrirAutreBdd = new QPushButton("Ouvrir une autre base de données");
+	ouvrirAutreBdd->setToolTip("Cliquez ici pour ouvrir une autre base de données. Si vous ne choisissez pas une autre base de données, celle par défaut sera choisi.");
 
 	QGridLayout *layoutOption2 = new QGridLayout;
 	layoutOption2->setContentsMargins(20, 0, 0, 0);
 	QPushButton *enregistrerFichiers = new QPushButton("Enregistrer les fichiers traduits sous");
+	enregistrerFichiers->setToolTip("Permet de choisir un dossier dans lequel sera enregistré les fichiers traduis.");
 	QPushButton *enregistrerApk = new QPushButton("Enregistrer les fichiers traduits");
+	enregistrerApk->setToolTip("Permet d'enregistrer les fichiers traduis dans le dossier de l'application. Ne fonctionnera pas si vous avez choisi un dossier personnalisé.");
 	QPushButton *enregistrerBddSous = new QPushButton("Enregistrer la base de données sous");
+	enregistrerBddSous->setToolTip("Permet d'enregistrer la base de données dans un dossier de votre choix.");
 	QPushButton *enregistrerBdd = new QPushButton("Enregistrer la base de données");
+	enregistrerBdd->setToolTip("Permet d'enregistrer la base de données dans le dossier bdd du programme (donc deviendra la base de données par défaut).");
 
-
-	QTabWidget *onglets = new QTabWidget;
+	onglets = new QTabWidget;
 	QWidget *page1 = new QWidget;
 	QGridLayout *layoutPage1 = new QGridLayout;
 	QLabel *labelFonctionATraduite = new QLabel("Fonction à traduire");
@@ -80,9 +92,42 @@ Fenetre::Fenetre()
 	QGridLayout *boutonsSuppl = new QGridLayout;
 	QPushButton *autre1 = new QPushButton("A propos de All Trad");
 	QPushButton *autre2 = new QPushButton("Fusion de bases de données");
+	autre2->setToolTip("Permet de fusionner deux bases de données.");
 	QPushButton *autre3 = new QPushButton;
 	QPushButton *autre4 = new QPushButton;
 	QPushButton *autre5 = new QPushButton;
+
+	QMenu *menuFichier = menuBar()->addMenu("Fichier");
+	QMenu *menuEdition = menuBar()->addMenu("Edition");
+	QAction *actionOuvrirApk = new QAction("Ouvrir dossier apk décompilé", this);
+	QAction *actionOuvrirFichiers = new QAction("Ouvrir fichiers à traduire", this);
+	QAction *actionOuvrirBdd = new QAction("Ouvrir une autre base de données", this);
+	QAction *actionOuvrirBddOrigine = new QAction("Remettre la base de données d'origine", this);
+	QAction *actionEnregistrerTout = new QAction("Enregistrer tout", this);
+	QAction *actionEnregistrerToutSous = new QAction("Enregistrer tout sous...", this);
+	QAction *actionQuitter = new QAction("Quitter", this);
+
+	QAction *actionAllerAuDebut = new QAction("Aller au début", this);
+	QAction *actionReculer10 = new QAction("Reculer de 10 lignes / menus", this);
+	QAction *actionAvancer10 = new QAction("Avancer de 10 lignes / menus", this);
+	QAction *actionAllerALaFin = new QAction("Aller à la fin", this);
+
+	menuFichier->addAction(actionOuvrirApk);
+	menuFichier->addAction(actionOuvrirFichiers);
+	menuFichier->addSeparator();
+	menuFichier->addAction(actionOuvrirBdd);
+	menuFichier->addAction(actionOuvrirBddOrigine);
+	menuFichier->addSeparator();
+	menuFichier->addAction(actionEnregistrerTout);
+	menuFichier->addAction(actionEnregistrerToutSous);
+	menuFichier->addSeparator();
+	menuFichier->addAction(actionQuitter);
+
+	menuEdition->addAction(actionAllerAuDebut);
+	menuEdition->addAction(actionReculer10);
+	menuEdition->addSeparator();
+	menuEdition->addAction(actionAvancer10);
+	menuEdition->addAction(actionAllerALaFin);
 
 	layoutOption1->addWidget(boutonAppliTrad, 0, 0);
 	layoutOption1->addWidget(langueVers, 0, 1);
@@ -149,7 +194,8 @@ Fenetre::Fenetre()
 	fenetreAPropos->setWindowTitle("A propos de All Trad");
 	QVBoxLayout *layout1 = new QVBoxLayout;
 	QLabel *image = new QLabel;
-	QLabel *texte = new QLabel("Logiciel de traduction d'apks. Créé par Alexandreou.");
+	QLabel *texte = new QLabel("Logiciel de traduction d'apks. Créé par Alexandreou.\n https://github.com/alexandreou/ViperTradTool");
+	texte->setOpenExternalLinks(true);
 	image->setPixmap(QPixmap("files/logo_long.png"));
 	layout1->addWidget(image);
 	layout1->addWidget(texte);
@@ -168,10 +214,13 @@ Fenetre::Fenetre()
 	QLabel *texteBddArrays = new QLabel("Fusion de bases de données Arrays.xml");
 	QPushButton *arraysBddB1 = new QPushButton("Fichier de base de données 1");
 	arraysBddT1 = new QLineEdit;
+	arraysBddT1->setReadOnly(true);
 	QPushButton *arraysBddB2 = new QPushButton("Fichier de base de données 2");
 	arraysBddT2 = new QLineEdit;
+	arraysBddT2->setReadOnly(true);
 	QPushButton *arraysBddB3 = new QPushButton("Dossier d'enregistrement");
 	arraysBddT3 = new QLineEdit;
+	arraysBddT3->setReadOnly(true);
 	QPushButton *arraysBddB4 = new QPushButton("Démarrer la fusion");
 	layout21->addWidget(texteBddArrays);
 	layout21->addWidget(arraysBddB1);
@@ -185,10 +234,13 @@ Fenetre::Fenetre()
 	QLabel *texteBddStrings = new QLabel("Fusion de bases de données Strings.xml");
 	QPushButton *stringsBddB1 = new QPushButton("Fichier de base de données 1");
 	stringsBddT1 = new QLineEdit;
+	stringsBddT1->setReadOnly(true);
 	QPushButton *stringsBddB2 = new QPushButton("Fichier de base de données 2");
 	stringsBddT2 = new QLineEdit;
+	stringsBddT2->setReadOnly(true);
 	QPushButton *stringsBddB3 = new QPushButton("Dossier d'enregistrement");
 	stringsBddT3 = new QLineEdit;
+	stringsBddT3->setReadOnly(true);
 	QPushButton *stringsBddB4 = new QPushButton("Démarrer la fusion");
 	layout22->addWidget(texteBddStrings);
 	layout22->addWidget(stringsBddB1);
@@ -202,6 +254,8 @@ Fenetre::Fenetre()
 	layout2->addLayout(layout21);
 	layout2->addLayout(layout22);
 	fenetreFusion->setLayout(layout2);
+
+	QShortcut *shortcut1 = new QShortcut(QKeySequence("Ctrl+S"), this);
 
 	connect(ouvrirApk, SIGNAL(clicked()), this, SLOT(getDossierApk()));
 	connect(ouvrirAutreBdd, SIGNAL(clicked()), this, SLOT(getAdresseBdd()));
@@ -227,6 +281,28 @@ Fenetre::Fenetre()
 	connect(stringsBddB2, SIGNAL(clicked()), this, SLOT(fStringsBddB2()));
 	connect(stringsBddB3, SIGNAL(clicked()), this, SLOT(fStringsBddB3()));
 	connect(stringsBddB4, SIGNAL(clicked()), this, SLOT(fStringsBddB4()));
+	connect(actionQuitter, SIGNAL(triggered()), qApp, SLOT(quit()));
+	connect(shortcut1, SIGNAL(activated()), this, SLOT(enregistrementsDansApk()));
+	connect(shortcut1, SIGNAL(activated()), this, SLOT(enregistrementsBdd()));
+	connect(actionOuvrirApk, SIGNAL(triggered()), this, SLOT(getDossierApk()));
+	connect(actionOuvrirFichiers, SIGNAL(triggered()), this, SLOT(getDossierFichiers()));
+	connect(actionOuvrirBdd, SIGNAL(triggered()), this, SLOT(getAdresseBdd()));
+	connect(actionOuvrirBddOrigine, SIGNAL(triggered()), this, SLOT(getAdresseBddOrigine()));
+	connect(actionAllerAuDebut, SIGNAL(triggered()), this, SLOT(ASDebut()));
+	connect(actionAllerALaFin, SIGNAL(triggered()), this, SLOT(ASFin()));
+	connect(actionAvancer10, SIGNAL(triggered()), this, SLOT(ASPlus10()));
+	connect(actionReculer10, SIGNAL(triggered()), this, SLOT(ASMoins10()));
+}
+
+std::string Fenetre::getLangue()
+{
+	if (langueVers->currentText() == "Anglais -> Français")
+		return "fr";
+	if (langueVers->currentText() == "Anglais -> Espagnol")
+		return "es";
+	if (langueVers->currentText() == "Anglais -> Allemand")
+		return "de";
+	return "fr";
 }
 
 void Fenetre::erreurNoDossierApk()
@@ -257,6 +333,7 @@ void Fenetre::getDossierApk()
 	QString dossier = QFileDialog::getExistingDirectory(this, "Ouvrir un .apk décompilé");
 	if (dossier != "")
 	{
+		t.setNomAppli(boutonAppliTrad->currentText().toStdString(), getLangue());
 		t.setAdresseApk(dossier);
 		bool reussite = t.traitement_ouverture_apk();
 		if (!reussite)
@@ -272,23 +349,59 @@ void Fenetre::getDossierApk()
 			menuATraduite->setText(t.getArraysFonctionATraduire());
 			lignesDansMenu = t.getArraysLignesATraduire();
 			actualiserMenu();
+			if(adresseApk->text() != "")
+				lignesDuMenu->removeItemWidget(lignesDuMenu->takeItem(0));
+			addLigneDOrigine(0);
 
 			adresseApk->setText(dossier);
 			nbLigneStrings->setText(QString::fromStdString(std::to_string(t.getPosStrings() + 1)) + "/" + QString::fromStdString(std::to_string(t.totalLigneStrings())));
 			nbLigneArrays->setText(QString::fromStdString(std::to_string(t.getPosArrays() + 1)) + "/" + QString::fromStdString(std::to_string(t.totalLigneArrays())));
+			lignesDuMenu->setCurrentRow(0);
+		}
+	}
+}
+
+void Fenetre::getDossierFichiers()
+{
+	QString fichierA = QFileDialog::getOpenFileName(this, "Ouvrir un fichier arrays.xml", QString(), "Fichier de traduction arrays (*.xml)");
+	if (fichierA != "")
+	{
+		QString fichierS = QFileDialog::getOpenFileName(this, "Ouvrir un fichier strings.xml", QString(), "Fichier de traduction strings (*.xml)");
+		if (fichierS != "")
+		{
+			t.setNomAppli(boutonAppliTrad->currentText().toStdString(), getLangue());
+			t.setAdresseFichiers(fichierS, fichierA);
+			t.traitement_ouverture_apk();		
+			t.creationEncours();
+			fonctionATraduite->setText(t.getStringsFonctionATraduire());
+			ligneDorigine->setText(t.getStringsLigneDOrigine());
+
+			menuATraduite->setText(t.getArraysFonctionATraduire());
+			lignesDansMenu = t.getArraysLignesATraduire();
+			actualiserMenu();
+
+			adresseApk->setText("Emplacements personnalisés");
+			nbLigneStrings->setText(QString::fromStdString(std::to_string(t.getPosStrings() + 1)) + "/" + QString::fromStdString(std::to_string(t.totalLigneStrings())));
+			nbLigneArrays->setText(QString::fromStdString(std::to_string(t.getPosArrays() + 1)) + "/" + QString::fromStdString(std::to_string(t.totalLigneArrays())));
+			
 		}
 	}
 }
 
 void Fenetre::getAdresseBdd()
 {
-	QString fichierS = QFileDialog::getOpenFileName(this, "Ouvrir une bdd string", QString(), "Base de données (*.xml)");
-	if (fichierS != "")
+	QString fichierA = QFileDialog::getOpenFileName(this, "Ouvrir une bdd arrays", QString(), "Base de données (*.xml)");
+	if (fichierA != "")
 	{
-		QString fichierA = QFileDialog::getOpenFileName(this, "Ouvrir une bdd arrays", QString(), "Base de données (*.xml)");
-		if(fichierA != "")
+		QString fichierS = QFileDialog::getOpenFileName(this, "Ouvrir une bdd strings", QString(), "Base de données (*.xml)");
+		if(fichierS != "")
 			t.setAdresseBdd(fichierS, fichierA);
 	}
+}
+
+void Fenetre::getAdresseBddOrigine()
+{
+	t.setNomAppli(boutonAppliTrad->currentText().toStdString(), getLangue());
 }
 
 void Fenetre::btraduireAvecBdd()
@@ -379,6 +492,122 @@ void Fenetre::stringLigneNoTrad()
 	}
 }
 
+void Fenetre::ASPlus10()
+{
+	if (adresseApk->text() == "")
+	{
+		erreurNoDossierApk();
+		getDossierApk();
+	}
+	else
+	{
+		if (onglets->currentIndex() == 1)
+		{
+			t.setPosArrays(+10);
+			menuATraduite->setText(t.getArraysFonctionATraduire());
+			lignesDansMenu = t.getArraysLignesATraduire();
+			actualiserMenu();
+			lignesDuMenu->removeItemWidget(lignesDuMenu->takeItem(0));
+			addLigneDOrigine(0);
+			nbLigneArrays->setText(QString::fromStdString(std::to_string(t.getPosArrays() + 1)) + "/" + QString::fromStdString(std::to_string(t.totalLigneArrays())));
+		}
+		else
+		{
+			t.setPosString(+10);
+			fonctionATraduite->setText(t.getStringsFonctionATraduire());
+			ligneDorigine->setText(t.getStringsLigneDOrigine());
+			nbLigneStrings->setText(QString::fromStdString(std::to_string(t.getPosStrings() + 1)) + "/" + QString::fromStdString(std::to_string(t.totalLigneStrings())));
+		}
+	}
+}
+
+void Fenetre::ASMoins10()
+{
+	if (adresseApk->text() == "")
+	{
+		erreurNoDossierApk();
+		getDossierApk();
+	}
+	else
+	{
+		if (onglets->currentIndex() == 1)
+		{
+			t.setPosArrays(-10);
+			menuATraduite->setText(t.getArraysFonctionATraduire());
+			lignesDansMenu = t.getArraysLignesATraduire();
+			actualiserMenu();
+			lignesDuMenu->removeItemWidget(lignesDuMenu->takeItem(0));
+			addLigneDOrigine(0);
+			nbLigneArrays->setText(QString::fromStdString(std::to_string(t.getPosArrays() + 1)) + "/" + QString::fromStdString(std::to_string(t.totalLigneArrays())));
+		}
+		else
+		{
+			t.setPosString(-10);
+			fonctionATraduite->setText(t.getStringsFonctionATraduire());
+			ligneDorigine->setText(t.getStringsLigneDOrigine());
+			nbLigneStrings->setText(QString::fromStdString(std::to_string(t.getPosStrings() + 1)) + "/" + QString::fromStdString(std::to_string(t.totalLigneStrings())));
+		}
+	}
+}
+
+void Fenetre::ASDebut()
+{
+	if (adresseApk->text() == "")
+	{
+		erreurNoDossierApk();
+		getDossierApk();
+	}
+	else
+	{
+		if (onglets->currentIndex() == 1)
+		{
+			t.setPosArrays(-999999);
+			menuATraduite->setText(t.getArraysFonctionATraduire());
+			lignesDansMenu = t.getArraysLignesATraduire();
+			actualiserMenu();
+			lignesDuMenu->removeItemWidget(lignesDuMenu->takeItem(0));
+			addLigneDOrigine(0);
+			nbLigneArrays->setText(QString::fromStdString(std::to_string(t.getPosArrays() + 1)) + "/" + QString::fromStdString(std::to_string(t.totalLigneArrays())));
+		}
+		else
+		{
+			t.setPosString(-999999);
+			fonctionATraduite->setText(t.getStringsFonctionATraduire());
+			ligneDorigine->setText(t.getStringsLigneDOrigine());
+			nbLigneStrings->setText(QString::fromStdString(std::to_string(t.getPosStrings() + 1)) + "/" + QString::fromStdString(std::to_string(t.totalLigneStrings())));
+		}
+	}
+}
+
+void Fenetre::ASFin()
+{
+	if (adresseApk->text() == "")
+	{
+		erreurNoDossierApk();
+		getDossierApk();
+	}
+	else
+	{
+		if (onglets->currentIndex() == 1)
+		{
+			t.setPosArrays(+999999);
+			menuATraduite->setText(t.getArraysFonctionATraduire());
+			lignesDansMenu = t.getArraysLignesATraduire();
+			actualiserMenu();
+			lignesDuMenu->removeItemWidget(lignesDuMenu->takeItem(0));
+			addLigneDOrigine(0);
+			nbLigneArrays->setText(QString::fromStdString(std::to_string(t.getPosArrays() + 1)) + "/" + QString::fromStdString(std::to_string(t.totalLigneArrays())));
+		}
+		else
+		{
+			t.setPosString(+999999);
+			fonctionATraduite->setText(t.getStringsFonctionATraduire());
+			ligneDorigine->setText(t.getStringsLigneDOrigine());
+			nbLigneStrings->setText(QString::fromStdString(std::to_string(t.getPosStrings() + 1)) + "/" + QString::fromStdString(std::to_string(t.totalLigneStrings())));
+		}
+	}
+}
+
 void Fenetre::ajouterTradLigneArrays()
 {
 	if (adresseApk->text() == "")
@@ -458,8 +687,9 @@ void Fenetre::enregistrementsDansApk()
 	}
 	else
 	{
-		t.enregistrementStringxml(adresseApk->text().toStdString() + "/res/values-fr/strings.xml");
-		t.enregistrementArraysxml(adresseApk->text().toStdString() + "/res/values-fr/arrays.xml");
+		std::string temp = getLangue();
+		t.enregistrementStringxml(adresseApk->text().toStdString() + "/res/values-" + temp + "/strings.xml");
+		t.enregistrementArraysxml(adresseApk->text().toStdString() + "/res/values-" + temp + "/arrays.xml");
 	}
 }
 
@@ -487,8 +717,9 @@ void Fenetre::enregistrementsBdd()
 	}
 	else
 	{
-		t.enregistrementBddStringxml("bdd/VenomTweaks_fr_strings.xml");
-		t.enregistrementBddArraysxml("bdd/VenomTweaks_fr_arrays.xml");
+		std::string temp = getLangue();
+		t.enregistrementBddStringxml("bdd/" + boutonAppliTrad->currentText().toStdString() + "_" + temp + "_strings.xml");
+		t.enregistrementBddArraysxml("bdd/" + boutonAppliTrad->currentText().toStdString() + "_" + temp + "_arrays.xml");
 	}
 }
 
@@ -501,9 +732,10 @@ void Fenetre::enregistrementsBddSous()
 	}
 	else
 	{
+		std::string temp = getLangue();
 		QString dossier = QFileDialog::getExistingDirectory(this, "Dossier d'enregistrement des bases de données");
-		t.enregistrementBddStringxml(dossier.toStdString() + "/VenomTweaks_fr_strings.xml");
-		t.enregistrementBddArraysxml(dossier.toStdString() + "/VenomTweaks_fr_arrays.xml");
+		t.enregistrementBddStringxml(dossier.toStdString() + "/" + boutonAppliTrad->currentText().toStdString() + "_" + temp + "_strings.xml");
+		t.enregistrementBddArraysxml(dossier.toStdString() + "/" + boutonAppliTrad->currentText().toStdString() + "_" + temp + "_arrays.xml");
 	}
 }
 
@@ -536,54 +768,73 @@ void Fenetre::fArraysBddB3()
 
 void Fenetre::fArraysBddB4()
 {
-	std::vector<std::vector<std::string>> question;
-	std::vector<std::string> question1, question2;
-	int reponse;
-	std::string texte;
-	int gardeQui = 0;
-	do
+	if(arraysBddT1->text() == "" || arraysBddT2->text() == "" || arraysBddT3->text() == "")
+		QMessageBox::critical(this, "Erreur", "Assurez-vous d'avoir rempli les 3 adresses au-dessus du bouton \"Démarrer la fusion\"");
+	else
 	{
-		question = t.fusionArrays(arraysBddT1->text(), arraysBddT2->text(), arraysBddT3->text(), gardeQui);
-		if (question[0][0] != "FFIINN")
+		std::vector<std::vector<std::string>> question;
+		std::vector<std::string> question1, question2;
+		int reponse;
+		std::string texte;
+		int gardeQui = 0;
+		bool oui_pour_tout = false;
+		do
 		{
-			if (question[1].size() > question[2].size())
+			question = t.fusionArrays(arraysBddT1->text(), arraysBddT2->text(), arraysBddT3->text(), gardeQui);
+			if (question[0][0] != "FFIINN")
 			{
-				question1 = question[1];
-				question2 = question[2];
-			}
-			else
-			{
-				question1 = question[2];
-				question2 = question[1];
-			}
-			texte = "Un doublon a été trouvé. Choisir \"Oui\" si le premier menu vous convient, sinon choisir \"Non\".\n" + question[0][0] + "\nMenu 1 | Menu 2\n";
-			for (int i = 0; i < question1.size(); i++)
-			{
-				texte += question1[i] + "  |  ";
-				if (i < question2.size())
+				if (!oui_pour_tout)
 				{
-					texte += question2[i];
-				}
-				else
-				{
-					texte += "Erreur : Pas de traduction";
-				}
-				texte += "\n";
-			}
+					if (question[1].size() > question[2].size())
+					{
+						question1 = question[1];
+						question2 = question[2];
+						texte = "Un doublon a été trouvé. Choisir \"Oui\" si le premier menu vous convient, sinon choisir \"Non\".\n" + question[0][0] + "\nMenu 1 | Menu 2\n";
+					}
+					else
+					{
+						question1 = question[2];
+						question2 = question[1];
+						texte = "Un doublon a été trouvé. Choisir \"Oui\" si le premier menu vous convient, sinon choisir \"Non\".\n" + question[0][0] + "\nMenu 2 | Menu 1\n";
+					}
+					for (int i = 0; i < question1.size(); i++)
+					{
+						texte += question1[i] + "  |  ";
+						if (i < question2.size())
+						{
+							texte += question2[i];
+						}
+						else
+						{
+							texte += "Erreur : Pas de traduction";
+						}
+						texte += "\n";
+					}
 
-			reponse = QMessageBox::question(this, "Doublon", QString::fromStdString(texte), QMessageBox::Yes | QMessageBox::No);
-			if (reponse == QMessageBox::Yes)
-			{
-				gardeQui = 1;
+					reponse = QMessageBox::question(this, "Doublon", QString::fromStdString(texte), QMessageBox::YesToAll | QMessageBox::Yes | QMessageBox::No | QMessageBox::NoToAll);
+					if (reponse == QMessageBox::Yes)
+					{
+						gardeQui = 1;
+					}
+					else if (reponse == QMessageBox::No)
+					{
+						gardeQui = 2;
+					}
+					else if (reponse == QMessageBox::YesToAll)
+					{
+						gardeQui = 1;
+						oui_pour_tout = true;
+					}
+					else if (reponse == QMessageBox::NoToAll)
+					{
+						gardeQui = 2;
+						oui_pour_tout = true;
+					}
+				}
 			}
-			else if (reponse == QMessageBox::No)
-			{
-				gardeQui = 2;
-			}
-		}
-
-	} while (question[0][0] != "FFIINN");
-	QMessageBox::information(this, "Réussite", "La fusion est terminé !");
+		} while (question[0][0] != "FFIINN");
+		QMessageBox::information(this, "Réussite", "La fusion est terminé !");
+	}
 }
 
 void Fenetre::fStringsBddB1()
@@ -615,31 +866,69 @@ void Fenetre::fStringsBddB3()
 
 void Fenetre::fStringsBddB4()
 {
-	std::vector<std::string> question;
-	std::string question1, question2;
-	int reponse;
-	std::string texte;
-	int gardeQui = 0;
-	do
+	if (stringsBddT1->text() == "" || stringsBddT2->text() == "" || stringsBddT3->text() == "")
+		QMessageBox::critical(this, "Erreur", "Assurez-vous d'avoir rempli les 3 adresses au-dessus du bouton \"Démarrer la fusion\"");
+
+	else
 	{
-		question = t.fusionStrings(stringsBddT1->text(), stringsBddT2->text(), stringsBddT3->text(), gardeQui);
-
-		if (question[0] != "FFIINN")
+		std::vector<std::string> question;
+		std::string question1, question2;
+		int reponse;
+		std::string texte;
+		int gardeQui = 0;
+		bool oui_pour_tout = false;
+		do
 		{
-			texte = "Un doublon a été trouvé. Choisir \"Oui\" si le premier menu vous convient, sinon choisir \"Non\".\n" + question[0] + "\nTrad 1 | Trad 2\n";
-			texte += question[1] + "  |  "+ question[2] + "\n";
+			question = t.fusionStrings(stringsBddT1->text(), stringsBddT2->text(), stringsBddT3->text(), gardeQui);
 
-			reponse = QMessageBox::question(this, "Doublon", QString::fromStdString(texte), QMessageBox::Yes | QMessageBox::No);
-			if (reponse == QMessageBox::Yes)
+			if (question[0] != "FFIINN")
 			{
-				gardeQui = 1;
-			}
-			else if (reponse == QMessageBox::No)
-			{
-				gardeQui = 2;
-			}
-		}
+				if (!oui_pour_tout)
+				{
+					texte = "Un doublon a été trouvé. Choisir \"Oui\" si le premier menu vous convient, sinon choisir \"Non\".\n" + question[0] + "\nTrad 1 | Trad 2\n";
+					texte += question[1] + "  |  " + question[2] + "\n";
 
-	} while (question[0] != "FFIINN");
-	QMessageBox::information(this, "Réussite", "La fusion est terminé !");
+					reponse = QMessageBox::question(this, "Doublon", QString::fromStdString(texte), QMessageBox::YesToAll | QMessageBox::Yes | QMessageBox::No | QMessageBox::NoToAll);
+					if (reponse == QMessageBox::Yes)
+					{
+						gardeQui = 1;
+					}
+					else if (reponse == QMessageBox::No)
+					{
+						gardeQui = 2;
+					}
+					else if (reponse == QMessageBox::YesToAll)
+					{
+						gardeQui = 1;
+						oui_pour_tout = true;
+					}
+					else if (reponse == QMessageBox::NoToAll)
+					{
+						gardeQui = 2;
+						oui_pour_tout = true;
+					}
+				}
+			}
+
+		} while (question[0] != "FFIINN");
+		QMessageBox::information(this, "Réussite", "La fusion est terminé !");
+	}
+}
+
+void Fenetre::closeEvent(QCloseEvent* event) 
+{
+	if (adresseApk->text() != "")
+	{
+		int reponse = QMessageBox::question(this, "Fermeture du programme", "Voulez-vous vraiment quitter ?\nAssurez-vous d'avoir sauvegardé votre travail !", QMessageBox::Yes | QMessageBox::No);
+
+		if (reponse == QMessageBox::Yes)
+			event->accept();
+
+		else
+			event->ignore();
+	}
+	else
+	{
+		event->accept();
+	}
 }

@@ -8,10 +8,37 @@ using namespace std;
 
 Traduction::Traduction()
 {
-	adresse_bdd_strings = "bdd/VenomTweaks_fr_strings.xml";
-	adresse_bdd_arrays = "bdd/VenomTweaks_fr_arrays.xml";
 	pos_arrays_fusion = 0;
 	pos_strings_fusion = 0;
+}
+
+void Traduction::remplace(string &dans)
+{
+	vector<int> pos;
+	int temp = 0;
+	for (int i = 0; i < dans.size(); i++)
+	{
+		if (dans[i] == '\'' || dans[i] == '\"')
+		{
+			pos.push_back(i);
+		}
+	}
+	for (int i = 0; i < pos.size(); i++)
+	{
+		if (pos[i] - 1 >= 0)
+		{
+			if (dans[pos[i] - 1] != '\\')
+			{
+				dans.insert(pos[i] + temp, "\\");
+				temp++;
+			}
+		}
+		else
+		{
+			dans.insert(pos[i] + temp, "\\");
+			temp++;
+		}
+	}
 }
 
 int Traduction::InStrVector(string elem, vector<string> dans)
@@ -48,7 +75,6 @@ int Traduction::InQString2xVector(vector<QString> elem, vector<vector<QString>> 
 
 void Traduction::setAdresseApk(QString adresse)
 {
-	adresse_dossier_apk = adresse;
 	liste_strings_fonctions = {};
 	liste_strings_trad = {};
 
@@ -74,14 +100,45 @@ void Traduction::setAdresseApk(QString adresse)
 	liste_arrays_fonctions = {};
 	encours_liste_arrays_trad = {};
 	pos_arrays = 0;
+
+	adresse_strings = (adresse + "/res/values/strings.xml").toStdString();
+	adresse_arrays = (adresse + "/res/values/arrays.xml").toStdString();
+}
+
+void Traduction::setAdresseFichiers(QString strings, QString arrays)
+{
+	liste_strings_fonctions = {};
+	liste_strings_trad = {};
+
+	liste_arrays_fonctions = {};
+	liste_arrays_trad = {};
+
+	liste_arrays_trad_notrad = {};
+
+
+	bdd_liste_strings_fonctions = {};
+	bdd_liste_strings_trad = {};
+
+	bdd_liste_arrays_fonctions = {};
+	bdd_liste_arrays_trad = {};
+
+	bdd_liste_arrays_trad_notrad = {};
+
+
+	encours_liste_strings_fonctions = {};
+	encours_liste_strings_trad = {};
+	pos_strings = 0;
+
+	liste_arrays_fonctions = {};
+	encours_liste_arrays_trad = {};
+	pos_arrays = 0;
+
+	adresse_strings = strings.toStdString();
+	adresse_arrays = arrays.toStdString();
 }
 
 bool Traduction::traitement_ouverture_apk()
 {
-	string adresse = adresse_dossier_apk.toStdString();
-	adresse_strings = adresse + "/res/values/strings.xml";
-	adresse_arrays  = adresse + "/res/values/arrays.xml";
-
 	ifstream fichier_strings(adresse_strings), fichier_arrays(adresse_arrays);
 
 	if (!fichier_strings || !fichier_arrays)
@@ -97,10 +154,14 @@ bool Traduction::traitement_ouverture_apk()
 		fichier_strings.close();
 		fichier_arrays.close();
 		vector<vector<string>> xml = lecture_xml_typeStrings(adresse_strings);
+		//xml[0].push_back("fin_traduction");
+		//xml[1].push_back("fin_traduction");
 		liste_strings_fonctions = xml[0];
 		liste_strings_trad = xml[1];
 
 		vector<vector<vector<string>>> xml1 = lecture_xml_typeArrays(adresse_arrays);
+		//xml1[0][0].push_back("fin_traduction");
+		//xml1[1].push_back({ "fin_traduction" });
 		liste_arrays_fonctions = xml1[0][0];
 		liste_arrays_trad = xml1[1];
 		liste_arrays_trad_notrad = xml1[2][0];
@@ -118,8 +179,22 @@ vector<vector<string>> Traduction::lecture_xml_typeStrings(string adresse_xml)
 	getline(xml, ligne);
 	getline(xml, ligne); 
 	getline(xml, ligne);
+	//int comptemp = 3;
 	while (ligne != "</resources>")
 	{
+		while (ligne == "" || ligne == "	" || ligne == " ")
+		{
+			//comptemp++;
+			//cout << comptemp << endl;
+			getline(xml, ligne);
+		}
+
+		if (ligne[0] == '	')
+		{
+			ligne.erase(ligne.begin());
+			ligne.insert(0, "    ");
+		}
+
 		compt = 18;
 		temp = "";
 		temp_char = 'a';
@@ -143,6 +218,8 @@ vector<vector<string>> Traduction::lecture_xml_typeStrings(string adresse_xml)
 		}
 		fonctions.push_back(temp);
 		temp = "";
+		if (ligne[compt] == '\"')
+			ligne.erase(ligne.begin() + compt);
 		for (int i = ligne.size() - 9; i < ligne.size(); i++)
 		{
 			temp += ligne[i];
@@ -157,6 +234,10 @@ vector<vector<string>> Traduction::lecture_xml_typeStrings(string adresse_xml)
 				compt++;
 				temp_char = ligne[compt];
 			}
+
+			if (temp[temp.size()-1] == '\"')
+				temp.erase(temp.begin() + temp.size() - 1);
+
 			trad.push_back(temp);
 		}
 		else
@@ -172,6 +253,8 @@ vector<vector<string>> Traduction::lecture_xml_typeStrings(string adresse_xml)
 			{
 				temp1 = "";
 				compt = 0;
+				//comptemp++;
+				//cout << comptemp << endl;
 				getline(xml, ligne);
 				for (int i = ligne.size() - 9; i < ligne.size(); i++)
 				{
@@ -179,11 +262,14 @@ vector<vector<string>> Traduction::lecture_xml_typeStrings(string adresse_xml)
 				}
 				if(temp1 == "</string>")
 				{
-					while (temp_char != '<')
+					if (ligne.size() != 9)
 					{
-						temp += ligne[compt];
-						compt++;
-						temp_char = ligne[compt];
+						while (temp_char != '<')
+						{
+							temp += ligne[compt];
+							compt++;
+							temp_char = ligne[compt];
+						}
 					}
 				}
 				else
@@ -196,8 +282,14 @@ vector<vector<string>> Traduction::lecture_xml_typeStrings(string adresse_xml)
 				}
 				compt = 0;
 			} while (temp1 != "</string>");
+
+			if (temp[temp.size() - 1] == '\"')
+				temp.erase(temp.begin() + temp.size() - 1);
+
 			trad.push_back(temp);
 		}
+		//comptemp++;
+		//cout << comptemp << endl;
 		getline(xml, ligne);
 	}
 	return { fonctions, trad };
@@ -217,6 +309,15 @@ vector<vector<vector<string>>> Traduction::lecture_xml_typeArrays(string adresse
 	while (ligne != "</resources>")
 	{
 		temp = "";
+		while (ligne == "" || ligne == "	" || ligne == " ")
+			getline(xml, ligne);
+
+		if (ligne[0] == '	')
+		{
+			ligne.erase(ligne.begin());
+			ligne.insert(0, "    ");
+		}
+
 		for (int i = 4; i < 10; i++)
 		{
 			temp += ligne[i];
@@ -233,7 +334,14 @@ vector<vector<vector<string>>> Traduction::lecture_xml_typeArrays(string adresse
 		else
 		{
 			temp = "";
-			vector<string> filtre = { "values\">", "_icons\">", "_ids\">", "_values_up\">", "values_new\">", "values_elite\">" };
+			vector<string> filtre;
+			if(nom_appli == "VenomTweaks")
+				filtre = { "values\">", "_icons\">", "_ids\">", "_values_up\">", "values_new\">", "values_elite\">" };
+			if (nom_appli == "VenomHUB")
+				filtre = { "values\">", "_list\">", "upport_irc_channel\">", "_labels\">", "_types\">", "harsets\">" };
+			if (nom_appli == "VenomSideBar")
+				filtre = { "values\">", "_icons\">", "_ids\">" };
+
 			bool test = false;
 
 			for (int j = 0; j < filtre.size(); j++)
@@ -273,6 +381,12 @@ vector<vector<vector<string>>> Traduction::lecture_xml_typeArrays(string adresse
 				getline(xml, ligne);
 				while (ligne != "    </string-array>")
 				{
+					if (ligne[0] == '	' && ligne[1] == '	')
+					{
+						ligne.erase(ligne.begin());
+						ligne.erase(ligne.begin());
+						ligne.insert(0, "        ");
+					}
 					temp = "";
 					compt = 14;
 					temp_char = 'a';
@@ -291,6 +405,7 @@ vector<vector<vector<string>>> Traduction::lecture_xml_typeArrays(string adresse
 		}
 		getline(xml, ligne);
 	}
+	trad.pop_back();
 	return { {fonctions}, trad, {notrad} };
 }
 
@@ -375,6 +490,10 @@ void Traduction::creationEncours()
 			encours_liste_arrays_trad.push_back(liste_arrays_trad[i]);
 		}
 	}
+	if (pos_strings >= encours_liste_strings_fonctions.size())
+		pos_strings = encours_liste_strings_fonctions.size() - 1;
+	if (pos_arrays >= encours_liste_arrays_fonctions.size())
+		pos_arrays = encours_liste_arrays_fonctions.size() - 1;
 }
 
 QString Traduction::getStringsFonctionATraduire()
@@ -405,8 +524,7 @@ QString Traduction::setTraductionString(QString trad, bool question)
 	if (question)
 	{
 		int temp = InStrVector(encours_liste_strings_fonctions[pos_strings], bdd_liste_strings_fonctions);
-		bdd_liste_strings_fonctions[temp] = encours_liste_strings_fonctions[pos_strings];
-		bdd_liste_strings_trad[temp] = encours_liste_strings_trad[pos_strings];
+		bdd_liste_strings_trad[temp] = trad.toStdString();
 		encours_liste_strings_trad[pos_strings] = trad.toStdString();
 		return "";
 	}
@@ -465,8 +583,7 @@ bool Traduction::setTraductionArrays(vector<QString> trad, bool question)
 	if (question)
 	{
 		int temp = InStrVector(encours_liste_arrays_fonctions[pos_arrays], bdd_liste_arrays_fonctions);
-		bdd_liste_arrays_fonctions[temp] = encours_liste_arrays_fonctions[pos_arrays];
-		bdd_liste_arrays_trad[temp] = encours_liste_arrays_trad[pos_arrays];
+		bdd_liste_arrays_trad[temp] = trad_string;
 		encours_liste_arrays_trad[pos_arrays] = trad_string;
 		return false;
 	}
@@ -503,6 +620,7 @@ bool Traduction::enregistrementStrings(string adresseavecnom, vector<string> fon
 				{
 					trad[i].erase(trad[i].begin()+j);
 					//trad[i].erase(trad[i].begin() + j + 1);
+					remplace(temp);
 					fichier << temp << endl;
 					temp = "";
 					antierreur = true;
@@ -512,10 +630,8 @@ bool Traduction::enregistrementStrings(string adresseavecnom, vector<string> fon
 					temp.push_back(trad[i][j]);
 				}
 			}
-			if (!antierreur)
-			{
-				temp.push_back(trad[i][trad[i].size() - 1]);
-			}
+			temp.push_back(trad[i][trad[i].size() - 1]);
+			remplace(temp);
 			fichier << temp << "</string>" << endl;
 		}
 		fichier << "</resources>";
@@ -548,6 +664,7 @@ bool Traduction::enregistrementArrays(string adresseavecnom, vector<string> fonc
 			fichier << "    <string-array name=\"" << fonctions[i] << "\">" << endl;
 			for (int j = 0; j < trad[i].size(); j++)
 			{
+				remplace(trad[i][j]);
 				fichier << "        <item>" << trad[i][j] << "</item>" << endl;
 			}
 			fichier << temp << "    </string-array>" << endl;
@@ -738,4 +855,12 @@ vector<string> Traduction::fusionStrings(QString adresseBdd1, QString adresseBdd
 	pos_strings_fusion = 0;
 	enregistrementStrings(adresseEnregistBdd.toStdString(), fusion_liste_strings_fonctions, fusion_liste_strings_trad);
 	return{ "FFIINN" };
+}
+
+void Traduction::setNomAppli(string nom, string langue1)
+{
+	adresse_bdd_strings = "bdd/" + nom + "_" + langue1 + "_strings.xml";
+	adresse_bdd_arrays = "bdd/" + nom + "_" + langue1 + "_arrays.xml";
+	nom_appli = nom;
+	langue = langue1;
 }

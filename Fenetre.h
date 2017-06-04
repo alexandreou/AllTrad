@@ -13,16 +13,23 @@ class Fenetre : public QMainWindow
 
 public:
 	Fenetre();
+	std::string getLangue();
 	void erreurNoDossierApk();
 	void actualiserMenu();
 
 public slots:
 	void getDossierApk();
+	void getDossierFichiers();
 	void getAdresseBdd();
+	void getAdresseBddOrigine();
 	void btraduireAvecBdd();
 	void stringLignePrec();
 	void stringLigneSuiv();
 	void stringLigneNoTrad();
+	void ASPlus10();
+	void ASMoins10();
+	void ASDebut();
+	void ASFin();
 	void ajouterTradLigneArrays();
 	void arraysLignePrec();
 	void arraysLigneSuiv();
@@ -39,9 +46,13 @@ public slots:
 	void fStringsBddB3();
 	void fStringsBddB4();
 	void addLigneDOrigine(int ligneSelect);
+	void closeEvent(QCloseEvent* event);
 
 private:
 	Traduction t;
+	QTabWidget *onglets;
+	QComboBox *boutonAppliTrad;
+	QComboBox *langueVers;
 	QLineEdit *fonctionATraduite;
 	QLineEdit *ligneDorigine;
 	QLineEdit *ligneTraduite;
