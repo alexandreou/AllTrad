@@ -1,5 +1,5 @@
 # AllTrad
-Outil de traduction des applications Venom.
+Outil de traduction des applications Venom et autres !
 
 Développé avec Qt 5.8. 
 
