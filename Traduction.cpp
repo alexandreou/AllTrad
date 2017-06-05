@@ -158,6 +158,7 @@ bool Traduction::traitement_ouverture_apk()
 		//xml[1].push_back("fin_traduction");
 		liste_strings_fonctions = xml[0];
 		liste_strings_trad = xml[1];
+		liste_strings_trad_notrad = xml[2];
 
 		vector<vector<vector<string>>> xml1 = lecture_xml_typeArrays(adresse_arrays);
 		//xml1[0][0].push_back("fin_traduction");
@@ -173,26 +174,38 @@ vector<vector<string>> Traduction::lecture_xml_typeStrings(string adresse_xml)
 {
 	ifstream xml(adresse_xml);
 	string ligne, temp, temp1;
-	vector<string> fonctions, trad;
+	vector<string> fonctions, trad, notrad, toutes_les_lignes;
 	int compt;
 	char temp_char = 'a';
-	getline(xml, ligne);
-	getline(xml, ligne); 
-	getline(xml, ligne);
-	//int comptemp = 3;
+	int comptemp = 2;
+	while (getline(xml, ligne))
+	{
+		toutes_les_lignes.push_back(ligne);
+	}
+	ligne = toutes_les_lignes[comptemp];
 	while (ligne != "</resources>")
 	{
 		while (ligne == "" || ligne == "	" || ligne == " ")
 		{
-			//comptemp++;
+			comptemp++;
 			//cout << comptemp << endl;
-			getline(xml, ligne);
+			ligne = toutes_les_lignes[comptemp];
 		}
 
 		if (ligne[0] == '	')
 		{
 			ligne.erase(ligne.begin());
 			ligne.insert(0, "    ");
+		}
+
+		temp = ligne.substr(0, 11);
+		while (temp != "    <string")
+		{
+			notrad.push_back(ligne);
+			comptemp++;
+			//cout << comptemp << endl;
+			ligne = toutes_les_lignes[comptemp];
+			temp = ligne.substr(0, 11);
 		}
 
 		compt = 18;
@@ -205,7 +218,7 @@ vector<vector<string>> Traduction::lecture_xml_typeStrings(string adresse_xml)
 			temp_char = ligne[compt];
 		}
 		compt += 1;
-		if (ligne[compt] == ' ')
+		if (ligne[compt] == ' ' && ligne[compt+1] == 'f' && ligne[compt + 2] == 'o')
 		{
 			temp += '\"';
 			for(int i = 0; i < 17; i++)
@@ -216,83 +229,102 @@ vector<vector<string>> Traduction::lecture_xml_typeStrings(string adresse_xml)
 		{
 			compt += 1;
 		}
-		fonctions.push_back(temp);
-		temp = "";
-		if (ligne[compt] == '\"')
-			ligne.erase(ligne.begin() + compt);
-		for (int i = ligne.size() - 9; i < ligne.size(); i++)
-		{
-			temp += ligne[i];
-		}
-		if (temp == "</string>")
-		{
-			temp = "";
-			temp_char = 'a';
-			while (temp_char != '<')
-			{
-				temp += ligne[compt];
-				compt++;
-				temp_char = ligne[compt];
-			}
 
-			if (temp[temp.size()-1] == '\"')
-				temp.erase(temp.begin() + temp.size() - 1);
+		vector<string> filtre;
+		if (nom_appli == "VenomTweaks")
+			filtre = {};
+		if (nom_appli == "VenomHUB")
+			filtre = {};
+		if (nom_appli == "VenomSideBar")
+			filtre = {};
+		if (nom_appli == "Viper4Android")
+			filtre = {"text_drv_blank", "abc_action_bar_home_description_format", "abc_action_bar_home_subtitle_description_format", 
+			"character_counter_pattern", "appbar_scrolling_view_behavior", "bottom_sheet_behavior", "text_forum_link", "text_updatelink" };
 
-			trad.push_back(temp);
+
+		if (InStrVector(temp, filtre) != -1)
+		{
+			notrad.push_back(ligne);
 		}
 		else
 		{
+			fonctions.push_back(temp);
 			temp = "";
-			temp_char = 'a';
-			for(int i = compt; i < ligne.size(); i++)
+			if (ligne[compt] == '\"')
+				ligne.erase(ligne.begin() + compt);
+
+			temp += ligne.substr(ligne.size() - 9, ligne.size());
+
+			if (temp == "</string>")
 			{
-				temp += ligne[i];
-			}
-			temp += "@@";
-			do 
-			{
-				temp1 = "";
-				compt = 0;
-				//comptemp++;
-				//cout << comptemp << endl;
-				getline(xml, ligne);
-				for (int i = ligne.size() - 9; i < ligne.size(); i++)
+				temp = "";
+				temp_char = 'a';
+				while (temp_char != '<')
 				{
-					temp1 += ligne[i];
+					temp += ligne[compt];
+					compt++;
+					temp_char = ligne[compt];
 				}
-				if(temp1 == "</string>")
+
+				if (temp[temp.size() - 1] == '\"')
+					temp.erase(temp.begin() + temp.size() - 1);
+
+				trad.push_back(temp);
+			}
+			else
+			{
+				temp = "";
+				temp_char = 'a';
+				for (int i = compt; i < ligne.size(); i++)
 				{
-					if (ligne.size() != 9)
+					temp += ligne[i];
+				}
+				temp += "@@";
+				do
+				{
+					temp1 = "";
+					compt = 0;
+					comptemp++;
+					//cout << comptemp << endl;
+					ligne = toutes_les_lignes[comptemp];
+					for (int i = ligne.size() - 9; i < ligne.size(); i++)
 					{
-						while (temp_char != '<')
+						temp1 += ligne[i];
+					}
+					if (temp1 == "</string>")
+					{
+						if (ligne.size() != 9)
 						{
-							temp += ligne[compt];
-							compt++;
-							temp_char = ligne[compt];
+							while (temp_char != '<')
+							{
+								temp += ligne[compt];
+								compt++;
+								temp_char = ligne[compt];
+							}
 						}
 					}
-				}
-				else
-				{
-					for (int i = compt; i < ligne.size(); i++)
+					else
 					{
-						temp += ligne[i];
+						for (int i = compt; i < ligne.size(); i++)
+						{
+							temp += ligne[i];
+						}
+						temp += "@@";
 					}
-					temp += "@@";
-				}
-				compt = 0;
-			} while (temp1 != "</string>");
+					compt = 0;
+				} while (temp1 != "</string>");
 
-			if (temp[temp.size() - 1] == '\"')
-				temp.erase(temp.begin() + temp.size() - 1);
+				if (temp[temp.size() - 1] == '\"')
+					temp.erase(temp.begin() + temp.size() - 1);
 
-			trad.push_back(temp);
+				trad.push_back(temp);
+			}
 		}
-		//comptemp++;
+		comptemp++;
 		//cout << comptemp << endl;
-		getline(xml, ligne);
+		ligne = toutes_les_lignes[comptemp];
 	}
-	return { fonctions, trad };
+	return { fonctions, trad, notrad };
 }
 
 vector<vector<vector<string>>> Traduction::lecture_xml_typeArrays(string adresse_xml)
@@ -341,6 +373,8 @@ vector<vector<vector<string>>> Traduction::lecture_xml_typeArrays(string adresse
 				filtre = { "values\">", "_list\">", "upport_irc_channel\">", "_labels\">", "_types\">", "harsets\">" };
 			if (nom_appli == "VenomSideBar")
 				filtre = { "values\">", "_icons\">", "_ids\">" };
+			if (nom_appli == "Viper4Android")
+				filtre = { "values\">", "_modes\">" };
 
 			bool test = false;
 
@@ -601,7 +635,7 @@ bool Traduction::setTraductionArrays(vector<QString> trad, bool question)
 	}
 }
 
-bool Traduction::enregistrementStrings(string adresseavecnom, vector<string> fonctions, vector<string> trad)
+bool Traduction::enregistrementStrings(string adresseavecnom, vector<string> fonctions, vector<string> trad, vector<string> notrad, bool mettrenotrad)
 {
 	ofstream fichier(adresseavecnom.c_str());
 	if (fichier)
@@ -609,6 +643,13 @@ bool Traduction::enregistrementStrings(string adresseavecnom, vector<string> fon
 		string temp;
 		bool antierreur;
 		fichier << "<?xml version=\"1.0\" encoding=\"utf-8\"?>" << endl << "<resources>" << endl;
+		if (mettrenotrad)
+		{
+			for (int i = 0; i < notrad.size(); i++)
+			{
+				fichier << notrad[i] << endl;
+			}
+		}
 		for (int i = 0; i < fonctions.size(); i++)
 		{
 			fichier << "    <string name=\"" << fonctions[i] << "\">";
@@ -681,7 +722,7 @@ bool Traduction::enregistrementArrays(string adresseavecnom, vector<string> fonc
 
 void Traduction::enregistrementStringxml(string adresse)
 {
-	enregistrementStrings(adresse, encours_liste_strings_fonctions, encours_liste_strings_trad);
+	enregistrementStrings(adresse, encours_liste_strings_fonctions, encours_liste_strings_trad, liste_strings_trad_notrad, true);
 }
 
 void Traduction::enregistrementArraysxml(string adresse)
@@ -691,12 +732,12 @@ void Traduction::enregistrementArraysxml(string adresse)
 
 void Traduction::enregistrementBddStringxml(string adresse)
 {
-	enregistrementStrings(adresse, bdd_liste_strings_fonctions, bdd_liste_strings_trad);
+	enregistrementStrings(adresse, bdd_liste_strings_fonctions, bdd_liste_strings_trad, {}, false);
 }
 
 void Traduction::enregistrementBddArraysxml(string adresse)
 {
-	enregistrementArrays(adresse, bdd_liste_arrays_fonctions, bdd_liste_arrays_trad, liste_arrays_trad_notrad, false);
+	enregistrementArrays(adresse, bdd_liste_arrays_fonctions, bdd_liste_arrays_trad, {}, false);
 }
 
 int Traduction::totalLigneArrays()
@@ -853,7 +894,7 @@ vector<string> Traduction::fusionStrings(QString adresseBdd1, QString adresseBdd
 		}
 	}
 	pos_strings_fusion = 0;
-	enregistrementStrings(adresseEnregistBdd.toStdString(), fusion_liste_strings_fonctions, fusion_liste_strings_trad);
+	enregistrementStrings(adresseEnregistBdd.toStdString(), fusion_liste_strings_fonctions, fusion_liste_strings_trad, {}, false);
 	return{ "FFIINN" };
 }
 

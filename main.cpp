@@ -20,6 +20,12 @@ int main(int argc, char *argv[])
 /*
 Changelog :
 
+v1.1
+Mise en place des vector notrad pour strings.xml (déjà mis en place pour les arrays). Adaptation du code.
+Mise en place de filtres pour strings.xml (comme avec arrays.xml).
+Optimisation du code.
+Ajout du support de Viper4Android.
+
 v1.0
 Ajout d'une barre de menu.
 Résolution de quelques bugs.

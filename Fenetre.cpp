@@ -10,7 +10,7 @@ Fenetre::Fenetre()
 	QGridLayout *layoutPrincipal = new QGridLayout;
 
 	setWindowIcon(QIcon("files/logo.png"));
-	setWindowTitle("All Trad v1.0");
+	setWindowTitle("All Trad v1.1");
 
 	QGridLayout *layoutOption = new QGridLayout;
 	layoutOption->setContentsMargins(0, 0, 0, 20);
@@ -28,6 +28,7 @@ Fenetre::Fenetre()
 	boutonAppliTrad->addItem("VenomTweaks");
 	boutonAppliTrad->addItem("VenomHUB");
 	boutonAppliTrad->addItem("VenomSideBar");
+	boutonAppliTrad->addItem("Viper4Android");
 	boutonAppliTrad->addItem("Autre");
 	boutonAppliTrad->setToolTip("Séléctionnez l'application que vous voulez traduire. Si elle n'y est pas, vous pouvez choisir \"Autre\" ou demander à Alexandreou.");
 	langueVers = new QComboBox;
@@ -371,7 +372,7 @@ void Fenetre::getDossierFichiers()
 		{
 			t.setNomAppli(boutonAppliTrad->currentText().toStdString(), getLangue());
 			t.setAdresseFichiers(fichierS, fichierA);
-			t.traitement_ouverture_apk();		
+			t.traitement_ouverture_apk();
 			t.creationEncours();
 			fonctionATraduite->setText(t.getStringsFonctionATraduire());
 			ligneDorigine->setText(t.getStringsLigneDOrigine());

@@ -31,7 +31,7 @@ public:
 	std::vector<QString> getArraysLignesATraduire();
 	void setPosArrays(int pos);
 	bool setTraductionArrays(std::vector<QString> trad, bool question);
-	bool enregistrementStrings(std::string adresse, std::vector<std::string> fonctions, std::vector<std::string> trad);
+	bool enregistrementStrings(std::string adresse, std::vector<std::string> fonctions, std::vector<std::string> trad, std::vector<std::string> notrad, bool mettrenotrad);
 	bool enregistrementArrays(std::string adresseavecnom, std::vector<std::string> fonctions, std::vector<std::vector<std::string>> trad, std::vector<std::string> notrad, bool mettrenotrad);
 	void enregistrementStringxml(std::string adresse);
 	void enregistrementArraysxml(std::string adresse);
@@ -57,10 +57,10 @@ private:
 
 	std::vector<std::string> liste_strings_fonctions;
 	std::vector<std::string> liste_strings_trad;
+	std::vector<std::string> liste_strings_trad_notrad;
 
 	std::vector<std::string> liste_arrays_fonctions;
 	std::vector<std::vector<std::string>> liste_arrays_trad;
-
 	std::vector<std::string> liste_arrays_trad_notrad;
 
 
@@ -69,7 +69,6 @@ private:
 
 	std::vector<std::string> bdd_liste_arrays_fonctions;
 	std::vector<std::vector<std::string>> bdd_liste_arrays_trad;
-
 	std::vector<std::string> bdd_liste_arrays_trad_notrad;
 
 
