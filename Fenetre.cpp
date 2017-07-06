@@ -6,11 +6,12 @@
 
 Fenetre::Fenetre()
 {
+	
 	QWidget *zoneCentrale = new QWidget;
 	QGridLayout *layoutPrincipal = new QGridLayout;
 
 	setWindowIcon(QIcon("files/logo.png"));
-	setWindowTitle("All Trad v1.1");
+	setWindowTitle("AllTrad v1.2");
 
 	QGridLayout *layoutOption = new QGridLayout;
 	layoutOption->setContentsMargins(0, 0, 0, 20);
@@ -91,9 +92,9 @@ Fenetre::Fenetre()
 	adresseApk->setReadOnly(true);
 
 	QGridLayout *boutonsSuppl = new QGridLayout;
-	QPushButton *autre1 = new QPushButton("A propos de All Trad");
-	QPushButton *autre2 = new QPushButton("Fusion de bases de données");
-	autre2->setToolTip("Permet de fusionner deux bases de données.");
+	QPushButton *autre1 = new QPushButton("A propos de AllTrad");
+	QPushButton *autre2 = new QPushButton("Fusion de bases de données (beta)");
+	autre2->setToolTip("Permet de fusionner deux bases de données. (Programme instable)");
 	QPushButton *autre3 = new QPushButton;
 	QPushButton *autre4 = new QPushButton;
 	QPushButton *autre5 = new QPushButton;
@@ -112,6 +113,12 @@ Fenetre::Fenetre()
 	QAction *actionReculer10 = new QAction("Reculer de 10 lignes / menus", this);
 	QAction *actionAvancer10 = new QAction("Avancer de 10 lignes / menus", this);
 	QAction *actionAllerALaFin = new QAction("Aller à la fin", this);
+
+	superBarreDeProgression = new QProgressBar;
+	superBarreDeProgression->setTextVisible(false);
+
+	texteDInformation = new QLabel;
+	texteDInformation->setAlignment(Qt::AlignCenter);
 
 	menuFichier->addAction(actionOuvrirApk);
 	menuFichier->addAction(actionOuvrirFichiers);
@@ -186,13 +193,16 @@ Fenetre::Fenetre()
 	layoutPrincipal->addWidget(onglets, 1, 0, 1, 2);
 	layoutPrincipal->addLayout(infoSuppApk, 2, 0, 1, 2);
 	layoutPrincipal->addLayout(boutonsSuppl, 3, 0, 1, 2);
+	layoutPrincipal->addWidget(superBarreDeProgression, 4, 0, 1, 2);
+	layoutPrincipal->addWidget(texteDInformation, 4, 0, 1, 2);
+
 
 	zoneCentrale->setLayout(layoutPrincipal);
 	setCentralWidget(zoneCentrale);
 
 	QDialog *fenetreAPropos = new QDialog;
 	fenetreAPropos->setWindowIcon(QIcon("files/logo.png"));
-	fenetreAPropos->setWindowTitle("A propos de All Trad");
+	fenetreAPropos->setWindowTitle("A propos de AllTrad");
 	QVBoxLayout *layout1 = new QVBoxLayout;
 	QLabel *image = new QLabel;
 	QLabel *texte = new QLabel("Logiciel de traduction d'apks. Créé par Alexandreou.\n https://github.com/alexandreou/ViperTradTool");
@@ -257,6 +267,8 @@ Fenetre::Fenetre()
 	fenetreFusion->setLayout(layout2);
 
 	QShortcut *shortcut1 = new QShortcut(QKeySequence("Ctrl+S"), this);
+	QShortcut *shortcut2 = new QShortcut(QKeySequence(Qt::Key_Return), this);
+	QShortcut *shortcut3 = new QShortcut(QKeySequence(Qt::Key_Enter), this);
 
 	connect(ouvrirApk, SIGNAL(clicked()), this, SLOT(getDossierApk()));
 	connect(ouvrirAutreBdd, SIGNAL(clicked()), this, SLOT(getAdresseBdd()));
@@ -293,6 +305,10 @@ Fenetre::Fenetre()
 	connect(actionAllerALaFin, SIGNAL(triggered()), this, SLOT(ASFin()));
 	connect(actionAvancer10, SIGNAL(triggered()), this, SLOT(ASPlus10()));
 	connect(actionReculer10, SIGNAL(triggered()), this, SLOT(ASMoins10()));
+	connect(shortcut2, SIGNAL(activated()), this, SLOT(raccourciEntrer()));
+	connect(shortcut3, SIGNAL(activated()), this, SLOT(raccourciEntrer()));
+
+	t.setControleInterface(superBarreDeProgression, texteDInformation);
 }
 
 std::string Fenetre::getLangue()
@@ -339,11 +355,11 @@ void Fenetre::getDossierApk()
 		bool reussite = t.traitement_ouverture_apk();
 		if (!reussite)
 		{
-			QMessageBox::critical(this, "Erreur", "Le dossier spécifié ne contient pas de fichiers à traduire.\nAssurez-vous qu'il n'y est pas d'accent dans l'adresse du dossier.\nS'il contient un accent, déplacez le dossier autre part (à la racine du disque dur par exemple).\n\nAdresse du dossier : "+dossier);
+			QMessageBox::critical(this, "Erreur", "Le dossier spécifié ne contient pas de fichiers à traduire.\n\nAdresse du dossier : "+dossier);
 		}
 		else
 		{
-			t.creationEncours();
+			t.creationVide();
 			fonctionATraduite->setText(t.getStringsFonctionATraduire());
 			ligneDorigine->setText(t.getStringsLigneDOrigine());
 
@@ -373,7 +389,7 @@ void Fenetre::getDossierFichiers()
 			t.setNomAppli(boutonAppliTrad->currentText().toStdString(), getLangue());
 			t.setAdresseFichiers(fichierS, fichierA);
 			t.traitement_ouverture_apk();
-			t.creationEncours();
+			t.creationVide();
 			fonctionATraduite->setText(t.getStringsFonctionATraduire());
 			ligneDorigine->setText(t.getStringsLigneDOrigine());
 
@@ -417,7 +433,7 @@ void Fenetre::btraduireAvecBdd()
 		bool reussite = t.traitement_ouverture_bdd();
 		if (!reussite)
 		{
-			QMessageBox::critical(this, "Erreur", "La base de donnée n'a pas pu être ouverte ou n'existe pas.\nAssurez-vous qu'il n'y est pas d'accent dans l'adresse du dossier contenant les bases de données.\nAssurez-vous aussi que le dossier \"bdd\" est dans le dossier du programme.");
+			QMessageBox::critical(this, "Erreur", "La base de donnée n'a pas pu être ouverte ou n'existe pas.\nAssurez-vous que le dossier \"bdd\" est dans le dossier du programme.");
 		}
 		else
 		{
@@ -445,6 +461,9 @@ void Fenetre::stringLignePrec()
 	else
 	{
 		t.setPosString(-1);
+		superBarreDeProgression->setMaximum(t.totalLigneStrings());
+		superBarreDeProgression->setValue(t.getPosStrings());
+		texteDInformation->setText("Progression de la traduction du fichier strings...");
 		fonctionATraduite->setText(t.getStringsFonctionATraduire());
 		ligneDorigine->setText(t.getStringsLigneDOrigine());
 		nbLigneStrings->setText(QString::fromStdString(std::to_string(t.getPosStrings() + 1)) + "/" + QString::fromStdString(std::to_string(t.totalLigneStrings())));
@@ -470,6 +489,9 @@ void Fenetre::stringLigneSuiv()
 			}
 		}
 		t.setPosString(+1);
+		superBarreDeProgression->setMaximum(t.totalLigneStrings());
+		superBarreDeProgression->setValue(t.getPosStrings());
+		texteDInformation->setText("Progression de la traduction du fichier strings...");
 		ligneTraduite->setText("");
 		fonctionATraduite->setText(t.getStringsFonctionATraduire());
 		ligneDorigine->setText(t.getStringsLigneDOrigine());
@@ -487,6 +509,9 @@ void Fenetre::stringLigneNoTrad()
 	else
 	{
 		t.setPosString(+1);
+		superBarreDeProgression->setMaximum(t.totalLigneStrings());
+		superBarreDeProgression->setValue(t.getPosStrings());
+		texteDInformation->setText("Progression de la traduction du fichier strings...");
 		fonctionATraduite->setText(t.getStringsFonctionATraduire());
 		ligneDorigine->setText(t.getStringsLigneDOrigine());
 		nbLigneStrings->setText(QString::fromStdString(std::to_string(t.getPosStrings() + 1)) + "/" + QString::fromStdString(std::to_string(t.totalLigneStrings())));
@@ -505,6 +530,9 @@ void Fenetre::ASPlus10()
 		if (onglets->currentIndex() == 1)
 		{
 			t.setPosArrays(+10);
+			superBarreDeProgression->setMaximum(t.totalLigneArrays());
+			superBarreDeProgression->setValue(t.getPosArrays());
+			texteDInformation->setText("Progression de la traduction du fichier arrays...");
 			menuATraduite->setText(t.getArraysFonctionATraduire());
 			lignesDansMenu = t.getArraysLignesATraduire();
 			actualiserMenu();
@@ -515,6 +543,9 @@ void Fenetre::ASPlus10()
 		else
 		{
 			t.setPosString(+10);
+			superBarreDeProgression->setMaximum(t.totalLigneStrings());
+			superBarreDeProgression->setValue(t.getPosStrings());
+			texteDInformation->setText("Progression de la traduction du fichier strings...");
 			fonctionATraduite->setText(t.getStringsFonctionATraduire());
 			ligneDorigine->setText(t.getStringsLigneDOrigine());
 			nbLigneStrings->setText(QString::fromStdString(std::to_string(t.getPosStrings() + 1)) + "/" + QString::fromStdString(std::to_string(t.totalLigneStrings())));
@@ -534,6 +565,9 @@ void Fenetre::ASMoins10()
 		if (onglets->currentIndex() == 1)
 		{
 			t.setPosArrays(-10);
+			superBarreDeProgression->setMaximum(t.totalLigneArrays());
+			superBarreDeProgression->setValue(t.getPosArrays());
+			texteDInformation->setText("Progression de la traduction du fichier arrays...");
 			menuATraduite->setText(t.getArraysFonctionATraduire());
 			lignesDansMenu = t.getArraysLignesATraduire();
 			actualiserMenu();
@@ -544,6 +578,9 @@ void Fenetre::ASMoins10()
 		else
 		{
 			t.setPosString(-10);
+			superBarreDeProgression->setMaximum(t.totalLigneStrings());
+			superBarreDeProgression->setValue(t.getPosStrings());
+			texteDInformation->setText("Progression de la traduction du fichier strings...");
 			fonctionATraduite->setText(t.getStringsFonctionATraduire());
 			ligneDorigine->setText(t.getStringsLigneDOrigine());
 			nbLigneStrings->setText(QString::fromStdString(std::to_string(t.getPosStrings() + 1)) + "/" + QString::fromStdString(std::to_string(t.totalLigneStrings())));
@@ -563,6 +600,9 @@ void Fenetre::ASDebut()
 		if (onglets->currentIndex() == 1)
 		{
 			t.setPosArrays(-999999);
+			superBarreDeProgression->setMaximum(t.totalLigneArrays());
+			superBarreDeProgression->setValue(t.getPosArrays());
+			texteDInformation->setText("Progression de la traduction du fichier arrays...");
 			menuATraduite->setText(t.getArraysFonctionATraduire());
 			lignesDansMenu = t.getArraysLignesATraduire();
 			actualiserMenu();
@@ -573,6 +613,9 @@ void Fenetre::ASDebut()
 		else
 		{
 			t.setPosString(-999999);
+			superBarreDeProgression->setMaximum(t.totalLigneStrings());
+			superBarreDeProgression->setValue(t.getPosStrings());
+			texteDInformation->setText("Progression de la traduction du fichier strings...");
 			fonctionATraduite->setText(t.getStringsFonctionATraduire());
 			ligneDorigine->setText(t.getStringsLigneDOrigine());
 			nbLigneStrings->setText(QString::fromStdString(std::to_string(t.getPosStrings() + 1)) + "/" + QString::fromStdString(std::to_string(t.totalLigneStrings())));
@@ -592,6 +635,9 @@ void Fenetre::ASFin()
 		if (onglets->currentIndex() == 1)
 		{
 			t.setPosArrays(+999999);
+			superBarreDeProgression->setMaximum(t.totalLigneArrays());
+			superBarreDeProgression->setValue(t.getPosArrays());
+			texteDInformation->setText("Progression de la traduction du fichier arrays...");
 			menuATraduite->setText(t.getArraysFonctionATraduire());
 			lignesDansMenu = t.getArraysLignesATraduire();
 			actualiserMenu();
@@ -602,6 +648,9 @@ void Fenetre::ASFin()
 		else
 		{
 			t.setPosString(+999999);
+			superBarreDeProgression->setMaximum(t.totalLigneStrings());
+			superBarreDeProgression->setValue(t.getPosStrings());
+			texteDInformation->setText("Progression de la traduction du fichier strings...");
 			fonctionATraduite->setText(t.getStringsFonctionATraduire());
 			ligneDorigine->setText(t.getStringsLigneDOrigine());
 			nbLigneStrings->setText(QString::fromStdString(std::to_string(t.getPosStrings() + 1)) + "/" + QString::fromStdString(std::to_string(t.totalLigneStrings())));
@@ -641,6 +690,9 @@ void Fenetre::arraysLignePrec()
 	else
 	{
 		t.setPosArrays(-1);
+		superBarreDeProgression->setMaximum(t.totalLigneArrays());
+		superBarreDeProgression->setValue(t.getPosArrays());
+		texteDInformation->setText("Progression de la traduction du fichier arrays...");
 		menuATraduite->setText(t.getArraysFonctionATraduire());
 		lignesDansMenu = t.getArraysLignesATraduire();
 		actualiserMenu();
@@ -670,6 +722,9 @@ void Fenetre::arraysLigneSuiv()
 			}
 		}
 		t.setPosArrays(+1);
+		superBarreDeProgression->setMaximum(t.totalLigneArrays());
+		superBarreDeProgression->setValue(t.getPosArrays());
+		texteDInformation->setText("Progression de la traduction du fichier arrays...");
 		menuATraduite->setText(t.getArraysFonctionATraduire());
 		lignesDansMenu = t.getArraysLignesATraduire();
 		actualiserMenu();
@@ -931,5 +986,20 @@ void Fenetre::closeEvent(QCloseEvent* event)
 	else
 	{
 		event->accept();
+	}
+}
+
+void Fenetre::raccourciEntrer()
+{
+	if (adresseApk->text() != "")
+	{
+		if (onglets->currentIndex() == 1)
+		{
+			ajouterTradLigneArrays();
+		}
+		else
+		{
+			stringLigneSuiv();
+		}
 	}
 }

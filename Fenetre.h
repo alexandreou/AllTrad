@@ -47,6 +47,7 @@ public slots:
 	void fStringsBddB4();
 	void addLigneDOrigine(int ligneSelect);
 	void closeEvent(QCloseEvent* event);
+	void raccourciEntrer();
 
 private:
 	Traduction t;
@@ -70,6 +71,8 @@ private:
 	QLineEdit *stringsBddT1;
 	QLineEdit *stringsBddT2;
 	QLineEdit *stringsBddT3;
+	QProgressBar *superBarreDeProgression;
+	QLabel *texteDInformation;
 };
 
 #endif

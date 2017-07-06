@@ -5,6 +5,8 @@
 #include <QString>
 #include <iostream>
 #include <vector>
+#include <QProgressBar>
+#include <QLabel>
 
 class Traduction
 {
@@ -22,6 +24,7 @@ public:
 
 	bool traitement_ouverture_bdd();
 	void setAdresseBdd(QString adresseS, QString adresseA);
+	void creationVide();
 	void creationEncours();
 	QString getStringsFonctionATraduire();
 	QString getStringsLigneDOrigine();
@@ -45,6 +48,7 @@ public:
 	std::vector<std::string> fusionStrings(QString adresseBdd1, QString adresseBdd2, QString adresseEnregistBdd, int reponse);
 
 	void setNomAppli(std::string nom, std::string langue1);
+	void setControleInterface(QProgressBar *barre, QLabel *info);
 
 
 private:
@@ -86,8 +90,17 @@ private:
 	std::vector<std::string> fusion_liste_arrays_fonctions;
 	std::vector<std::vector<std::string>> fusion_liste_arrays_trad;
 
+	std::vector<std::vector<std::vector<std::string>>> fusion_bdd1_arrays;
+	std::vector<std::vector<std::vector<std::string>>> fusion_bdd2_arrays;
+
+	std::vector<std::vector<std::string>> fusion_bdd1_strings;
+	std::vector<std::vector<std::string>> fusion_bdd2_strings;
+
 	int pos_arrays_fusion;
 	int pos_strings_fusion;
+
+	QProgressBar *barreDeProgress;
+	QLabel *ligneDInformation;
 };
 
 #endif

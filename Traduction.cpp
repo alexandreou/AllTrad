@@ -1,8 +1,9 @@
 // Auteur : Alexandreou
 #include "Traduction.h"
 #include <iostream>
-#include <fstream>
 #include <vector>
+#include <QFile>
+#include <QTextStream>
 
 using namespace std;
 
@@ -139,20 +140,22 @@ void Traduction::setAdresseFichiers(QString strings, QString arrays)
 
 bool Traduction::traitement_ouverture_apk()
 {
-	ifstream fichier_strings(adresse_strings), fichier_arrays(adresse_arrays);
-
-	if (!fichier_strings || !fichier_arrays)
+	barreDeProgress->setValue(0);
+	ligneDInformation->setText("Début de la lecture de l'apk.");
+	QFile fichier_strings(QString::fromStdString(adresse_strings)), fichier_arrays(QString::fromStdString(adresse_arrays));
+	
+	if (!fichier_strings.open(QIODevice::ReadOnly | QIODevice::Text) && !fichier_arrays.open(QIODevice::ReadOnly | QIODevice::Text))
 	{
 		adresse_strings = "";
 		adresse_arrays = "";
-		fichier_strings.close();
-		fichier_arrays.close();
+		barreDeProgress->setMinimum(0);
+		barreDeProgress->setMaximum(0);
+		barreDeProgress->setValue(-1);
+		ligneDInformation->setText("Lecture de l'apk échouée !");
 		return false;
 	}
 	else
 	{
-		fichier_strings.close();
-		fichier_arrays.close();
 		vector<vector<string>> xml = lecture_xml_typeStrings(adresse_strings);
 		//xml[0].push_back("fin_traduction");
 		//xml[1].push_back("fin_traduction");
@@ -167,27 +170,37 @@ bool Traduction::traitement_ouverture_apk()
 		liste_arrays_trad = xml1[1];
 		liste_arrays_trad_notrad = xml1[2][0];
 	}
+	barreDeProgress->setMinimum(0);
+	barreDeProgress->setMaximum(0);
+	barreDeProgress->setValue(-1);
+	ligneDInformation->setText("Lecture de l'apk terminée.");
 	return true;
 }
 
 vector<vector<string>> Traduction::lecture_xml_typeStrings(string adresse_xml)
 {
-	ifstream xml(adresse_xml);
+	ligneDInformation->setText("Lecture du fichier strings : " + QString::fromStdString(adresse_xml));
+	QFile xml(QString::fromStdString(adresse_xml));
+	xml.open(QIODevice::ReadOnly | QIODevice::Text);
+	QTextStream texte(&xml);
+	texte.setCodec("UTF-8");
 	string ligne, temp, temp1;
 	vector<string> fonctions, trad, notrad, toutes_les_lignes;
-	int compt;
 	char temp_char = 'a';
-	int comptemp = 2;
-	while (getline(xml, ligne))
+	int compt, comptemp = 2;
+	while (!texte.atEnd()) 
 	{
-		toutes_les_lignes.push_back(ligne);
+		toutes_les_lignes.push_back(texte.readLine().toStdString());
 	}
 	ligne = toutes_les_lignes[comptemp];
+	barreDeProgress->setMaximum(toutes_les_lignes.size());
+	barreDeProgress->setValue(comptemp);
 	while (ligne != "</resources>")
 	{
 		while (ligne == "" || ligne == "	" || ligne == " ")
 		{
 			comptemp++;
+			barreDeProgress->setValue(comptemp);
 			//cout << comptemp << endl;
 			ligne = toutes_les_lignes[comptemp];
 		}
@@ -203,6 +216,7 @@ vector<vector<string>> Traduction::lecture_xml_typeStrings(string adresse_xml)
 		{
 			notrad.push_back(ligne);
 			comptemp++;
+			barreDeProgress->setValue(comptemp);
 			//cout << comptemp << endl;
 			ligne = toutes_les_lignes[comptemp];
 			temp = ligne.substr(0, 11);
@@ -233,10 +247,21 @@ vector<vector<string>> Traduction::lecture_xml_typeStrings(string adresse_xml)
 		vector<string> filtre;
 		if (nom_appli == "VenomTweaks")
 			filtre = {};
+
 		if (nom_appli == "VenomHUB")
-			filtre = {};
+			filtre = { "google_app_id", "support_irc_server", "account_accept_terms", "firebase_database_url", "default_web_client_id", "google_api_key", 
+			"gcm_defaultSenderId", "google_crash_reporting_api_key", "key_show_timestamp", "download_percent", "key_show_icons", "default_show_timestamp", 
+			"default_show_icons", "key_show_colors", "default_show_colors", "key_show_colors_nick", "default_show_colors_nick", "key_24h_format", 
+			"default_24h_format", "key_include_seconds", "default_include_seconds", "key_reconnect", "default_reconnect", "key_reconnect_interval", 
+			"default_reconnect_interval", "key_ignore_motd", "default_ignore_motd", "key_quitmessage", "default_quitmessage", "key_fontsize", "default_fontsize",
+			"key_show_joinpartquit", "default_show_joinpartquit", "key_vibrate_highlight", "default_vibrate_highlight", "key_sound_highlight", "default_sound_highlight",
+			"key_led_highlight", "default_led_highlight", "key_notice_server_window", "default_notice_server_window", "key_mirc_colors", "default_mirc_colors",
+			"key_graphical_smilies", "default_graphical_smilies", "key_autocorrect_text", "default_autocorrect_text", "key_autocap_sentences", "default_autocap_sentences",
+			"key_ime_extract", "default_ime_extract", "key_history_size", "default_history_size", "key_debug_traffic", "default_debug_traffic", "action_reconnect" };
+
 		if (nom_appli == "VenomSideBar")
 			filtre = {};
+
 		if (nom_appli == "Viper4Android")
 			filtre = {"text_drv_blank", "abc_action_bar_home_description_format", "abc_action_bar_home_subtitle_description_format", 
 			"character_counter_pattern", "appbar_scrolling_view_behavior", "bottom_sheet_behavior", "text_forum_link", "text_updatelink" };
@@ -285,6 +310,7 @@ vector<vector<string>> Traduction::lecture_xml_typeStrings(string adresse_xml)
 					temp1 = "";
 					compt = 0;
 					comptemp++;
+					barreDeProgress->setValue(comptemp);
 					//cout << comptemp << endl;
 					ligne = toutes_les_lignes[comptemp];
 					for (int i = ligne.size() - 9; i < ligne.size(); i++)
@@ -321,28 +347,47 @@ vector<vector<string>> Traduction::lecture_xml_typeStrings(string adresse_xml)
 			}
 		}
 		comptemp++;
+		barreDeProgress->setValue(comptemp);
 		//cout << comptemp << endl;
 		ligne = toutes_les_lignes[comptemp];
 	}
+	ligneDInformation->setText("Lecture du fichier strings terminée.");
+	barreDeProgress->setMinimum(0);
+	barreDeProgress->setMaximum(0);
+	barreDeProgress->setValue(-1);
 	return { fonctions, trad, notrad };
 }
 
 vector<vector<vector<string>>> Traduction::lecture_xml_typeArrays(string adresse_xml)
 {
-	ifstream xml(adresse_xml);
+	ligneDInformation->setText("Lecture du fichier arrays : " + QString::fromStdString(adresse_xml));
+	QFile xml(QString::fromStdString(adresse_xml));
+	xml.open(QIODevice::ReadOnly | QIODevice::Text);
+	QTextStream texte(&xml);
+	texte.setCodec("UTF-8");
 	string ligne, temp, temp1;
-	vector<string> fonctions, notrad;
+	vector<string> fonctions, notrad, toutes_les_lignes;
 	vector<vector<string>> trad = { {} };
 	int compt, pos_trad = 0;
+	int comptemp = 2;
 	char temp_char = 'a';
-	getline(xml, ligne);
-	getline(xml, ligne);
-	getline(xml, ligne);
+	while (!texte.atEnd())
+	{
+		toutes_les_lignes.push_back(texte.readLine().toStdString());
+	}
+	ligne = toutes_les_lignes[comptemp];
+	barreDeProgress->setMaximum(toutes_les_lignes.size());
+	barreDeProgress->setValue(comptemp);
 	while (ligne != "</resources>")
 	{
 		temp = "";
 		while (ligne == "" || ligne == "	" || ligne == " ")
-			getline(xml, ligne);
+		{
+			comptemp++;
+			barreDeProgress->setValue(comptemp);
+			//cout << comptemp << endl;
+			ligne = toutes_les_lignes[comptemp];
+		}
 
 		if (ligne[0] == '	')
 		{
@@ -359,7 +404,10 @@ vector<vector<vector<string>>> Traduction::lecture_xml_typeArrays(string adresse
 			notrad.push_back(ligne);
 			while (ligne != "    </array>")
 			{
-				getline(xml, ligne);
+				comptemp++;
+				barreDeProgress->setValue(comptemp);
+				//cout << comptemp << endl;
+				ligne = toutes_les_lignes[comptemp];
 				notrad.push_back(ligne);
 			}
 		}
@@ -368,22 +416,23 @@ vector<vector<vector<string>>> Traduction::lecture_xml_typeArrays(string adresse
 			temp = "";
 			vector<string> filtre;
 			if(nom_appli == "VenomTweaks")
-				filtre = { "values\">", "_icons\">", "_ids\">", "_values_up\">", "values_new\">", "values_elite\">" };
+				filtre = { "values", "_icons", "_ids", "_values_up", "values_new", "values_elite", "listview_animation_entries", "listview_interpolator_entries", "listview_cache_entries", "mms_size_entries", 
+				"cell_setting_entries", "cell_setting_entries_new" };
 			if (nom_appli == "VenomHUB")
-				filtre = { "values\">", "_list\">", "upport_irc_channel\">", "_labels\">", "_types\">", "harsets\">" };
+				filtre = { "values", "_list", "upport_irc_channel", "_labels", "_types", "harsets" };
 			if (nom_appli == "VenomSideBar")
-				filtre = { "values\">", "_icons\">", "_ids\">" };
+				filtre = { "values", "_icons", "_ids" };
 			if (nom_appli == "Viper4Android")
-				filtre = { "values\">", "_modes\">" };
+				filtre = { "values", "_modes" };
 
 			bool test = false;
 
 			for (int j = 0; j < filtre.size(); j++)
 			{
 				temp = "";
-				if (ligne.size() - filtre[j].size() > 0)
+				if (ligne.size() - filtre[j].size() - 2 > 0)
 				{
-					for (int i = ligne.size() - filtre[j].size(); i < ligne.size(); i++)
+					for (int i = ligne.size() - filtre[j].size() - 2; i < ligne.size()-2; i++)
 					{
 						temp += ligne[i];
 					}
@@ -393,7 +442,10 @@ vector<vector<vector<string>>> Traduction::lecture_xml_typeArrays(string adresse
 						notrad.push_back(ligne);
 						while (ligne != "    </string-array>")
 						{
-							getline(xml, ligne);
+							comptemp++;
+							barreDeProgress->setValue(comptemp);
+							//cout << comptemp << endl;
+							ligne = toutes_les_lignes[comptemp];
 							notrad.push_back(ligne);
 						}
 					}
@@ -412,7 +464,10 @@ vector<vector<vector<string>>> Traduction::lecture_xml_typeArrays(string adresse
 					temp_char = ligne[compt];
 				}
 				fonctions.push_back(temp);
-				getline(xml, ligne);
+				comptemp++;
+				barreDeProgress->setValue(comptemp);
+				//cout << comptemp << endl;
+				ligne = toutes_les_lignes[comptemp];
 				while (ligne != "    </string-array>")
 				{
 					if (ligne[0] == '	' && ligne[1] == '	')
@@ -431,32 +486,46 @@ vector<vector<vector<string>>> Traduction::lecture_xml_typeArrays(string adresse
 						temp_char = ligne[compt];
 					}
 					trad[pos_trad].push_back(temp);
-					getline(xml, ligne);
+					comptemp++;
+					barreDeProgress->setValue(comptemp);
+					//cout << comptemp << endl;
+					ligne = toutes_les_lignes[comptemp];
 				}
 				pos_trad++;
 				trad.push_back({});
 			}
 		}
-		getline(xml, ligne);
+		comptemp++;
+		barreDeProgress->setValue(comptemp);
+		//cout << comptemp << endl;
+		ligne = toutes_les_lignes[comptemp];
 	}
 	trad.pop_back();
+	ligneDInformation->setText("Lecture du fichier arrays terminée.");
+	barreDeProgress->setMinimum(0);
+	barreDeProgress->setMaximum(0);
+	barreDeProgress->setValue(-1);
 	return { {fonctions}, trad, {notrad} };
 }
 
 bool Traduction::traitement_ouverture_bdd()
 {
-	ifstream fichier_strings(adresse_bdd_strings), fichier_arrays(adresse_bdd_arrays);
+	barreDeProgress->setValue(0);
+	ligneDInformation->setText("Début de la lecture de la base de données.");
+	QFile fichier_strings(QString::fromStdString(adresse_bdd_strings)), fichier_arrays(QString::fromStdString(adresse_bdd_arrays));
 
-	if (!fichier_strings || !fichier_arrays)
+	if (!fichier_strings.open(QIODevice::ReadOnly | QIODevice::Text) && !fichier_arrays.open(QIODevice::ReadOnly | QIODevice::Text))
 	{
-		fichier_strings.close();
-		fichier_arrays.close();
+		adresse_strings = "";
+		adresse_arrays = "";
+		barreDeProgress->setMinimum(0);
+		barreDeProgress->setMaximum(0);
+		barreDeProgress->setValue(-1);
+		ligneDInformation->setText("Lecture de la base de données échouée !");
 		return false;
 	}
 	else
 	{
-		fichier_strings.close();
-		fichier_arrays.close();
 		vector<vector<string>> xml = lecture_xml_typeStrings(adresse_bdd_strings);
 		bdd_liste_strings_fonctions = xml[0];
 		bdd_liste_strings_trad = xml[1];
@@ -466,6 +535,10 @@ bool Traduction::traitement_ouverture_bdd()
 		bdd_liste_arrays_trad = xml1[1];
 		bdd_liste_arrays_trad_notrad = xml1[2][0];
 	}
+	barreDeProgress->setMinimum(0);
+	barreDeProgress->setMaximum(0);
+	barreDeProgress->setValue(-1);
+	ligneDInformation->setText("Lecture de la base de données terminée.");
 	return true;
 }
 
@@ -475,15 +548,42 @@ void Traduction::setAdresseBdd(QString adresseS, QString adresseA)
 	adresse_bdd_arrays = adresseA.toStdString();
 }
 
+void Traduction::creationVide()
+{
+	int temp;
+	pos_strings = 0;
+	pos_arrays = 0;
+
+	ligneDInformation->setText("Début de la préparation de la traduction.");
+	ligneDInformation->setText("Préparation de la traduction en cours...");
+
+	encours_liste_strings_fonctions = liste_strings_fonctions;
+	encours_liste_strings_trad = liste_strings_trad;
+	encours_liste_arrays_fonctions = liste_arrays_fonctions;
+	encours_liste_arrays_trad = liste_arrays_trad;
+
+	barreDeProgress->setMinimum(0);
+	barreDeProgress->setMaximum(0);
+	barreDeProgress->setValue(-1);
+	ligneDInformation->setText("Préparation de la traduction terminée.");
+}
+
 void Traduction::creationEncours()
 {
 	int temp; 
 	pos_strings = 0;
 	pos_arrays = 0;
+
+	barreDeProgress->setValue(0);
+	ligneDInformation->setText("Début de la fusion de la base de données avec les fichiers strings et arrays ouverts.");
+	ligneDInformation->setText("Fusion de la base de données avec les fichiers strings et arrays ouverts en cours...");
+
 	encours_liste_strings_fonctions = {};
 	encours_liste_strings_trad = {};
 	encours_liste_arrays_fonctions = {};
 	encours_liste_arrays_trad = {};
+
+	barreDeProgress->setMaximum(liste_strings_fonctions.size()*2 + liste_arrays_fonctions.size()*2);
 
 	for (int i = 0; i < liste_strings_fonctions.size(); i++)
 	{
@@ -494,6 +594,7 @@ void Traduction::creationEncours()
 			encours_liste_strings_trad.push_back(bdd_liste_strings_trad[temp]);
 			pos_strings++;
 		}
+		barreDeProgress->setValue(barreDeProgress->value() + 1);
 	}
 	for (int i = 0; i < liste_strings_fonctions.size(); i++)
 	{
@@ -503,6 +604,7 @@ void Traduction::creationEncours()
 			encours_liste_strings_fonctions.push_back(liste_strings_fonctions[i]);
 			encours_liste_strings_trad.push_back(liste_strings_trad[i]);
 		}
+		barreDeProgress->setValue(barreDeProgress->value() + 1);
 	}
 
 	for (int i = 0; i < liste_arrays_fonctions.size(); i++)
@@ -514,6 +616,7 @@ void Traduction::creationEncours()
 			encours_liste_arrays_trad.push_back(bdd_liste_arrays_trad[temp]);
 			pos_arrays++;
 		}
+		barreDeProgress->setValue(barreDeProgress->value() + 1);
 	}
 	for (int i = 0; i < liste_arrays_fonctions.size(); i++)
 	{
@@ -523,11 +626,16 @@ void Traduction::creationEncours()
 			encours_liste_arrays_fonctions.push_back(liste_arrays_fonctions[i]);
 			encours_liste_arrays_trad.push_back(liste_arrays_trad[i]);
 		}
+		barreDeProgress->setValue(barreDeProgress->value() + 1);
 	}
 	if (pos_strings >= encours_liste_strings_fonctions.size())
 		pos_strings = encours_liste_strings_fonctions.size() - 1;
 	if (pos_arrays >= encours_liste_arrays_fonctions.size())
 		pos_arrays = encours_liste_arrays_fonctions.size() - 1;
+	barreDeProgress->setMinimum(0);
+	barreDeProgress->setMaximum(0);
+	barreDeProgress->setValue(-1);
+	ligneDInformation->setText("Fusion de la base de données avec les fichiers strings et arrays ouverts terminée.");
 }
 
 QString Traduction::getStringsFonctionATraduire()
@@ -637,22 +745,31 @@ bool Traduction::setTraductionArrays(vector<QString> trad, bool question)
 
 bool Traduction::enregistrementStrings(string adresseavecnom, vector<string> fonctions, vector<string> trad, vector<string> notrad, bool mettrenotrad)
 {
-	ofstream fichier(adresseavecnom.c_str());
-	if (fichier)
+	barreDeProgress->setValue(0);
+	ligneDInformation->setText("Début de l'enregistrement du fichier strings : " + QString::fromStdString(adresseavecnom));
+	ligneDInformation->setText("Enregistrement du fichier strings : " + QString::fromStdString(adresseavecnom) + " en cours...");
+
+	QFile fichier(QString::fromStdString(adresseavecnom));
+	if (fichier.open(QIODevice::WriteOnly | QIODevice::Text))
 	{
+		barreDeProgress->setMaximum(fonctions.size());
+		QTextStream texte_sortie(&fichier);
+		texte_sortie.setCodec("UTF-8");
 		string temp;
 		bool antierreur;
-		fichier << "<?xml version=\"1.0\" encoding=\"utf-8\"?>" << endl << "<resources>" << endl;
+		texte_sortie << "<?xml version=\"1.0\" encoding=\"utf-8\"?>" << endl << "<resources>" << endl;
 		if (mettrenotrad)
 		{
+			barreDeProgress->setMaximum(fonctions.size() + notrad.size());
 			for (int i = 0; i < notrad.size(); i++)
 			{
-				fichier << notrad[i] << endl;
+				texte_sortie << QString::fromStdString(notrad[i]) << endl;
+				barreDeProgress->setValue(barreDeProgress->value() + 1);
 			}
 		}
 		for (int i = 0; i < fonctions.size(); i++)
 		{
-			fichier << "    <string name=\"" << fonctions[i] << "\">";
+			texte_sortie << "    <string name=\"" << QString::fromStdString(fonctions[i]) << "\">";
 			temp = "";
 			antierreur = false;
 			for (int j = 0; j < trad[i].size()-1; j++)
@@ -662,7 +779,7 @@ bool Traduction::enregistrementStrings(string adresseavecnom, vector<string> fon
 					trad[i].erase(trad[i].begin()+j);
 					//trad[i].erase(trad[i].begin() + j + 1);
 					remplace(temp);
-					fichier << temp << endl;
+					texte_sortie << QString::fromStdString(temp) << endl;
 					temp = "";
 					antierreur = true;
 				}
@@ -673,49 +790,80 @@ bool Traduction::enregistrementStrings(string adresseavecnom, vector<string> fon
 			}
 			temp.push_back(trad[i][trad[i].size() - 1]);
 			remplace(temp);
-			fichier << temp << "</string>" << endl;
+			texte_sortie << QString::fromStdString(temp) << "</string>" << endl;
+			barreDeProgress->setValue(barreDeProgress->value() + 1);
 		}
-		fichier << "</resources>";
-		fichier.close();
+		texte_sortie << "</resources>";
+
+		barreDeProgress->setMinimum(0);
+		barreDeProgress->setMaximum(0);
+		barreDeProgress->setValue(-1);
+		ligneDInformation->setText("Enregistrement du fichier strings : " + QString::fromStdString(adresseavecnom) + " terminée.");
+
 		return true;
 	}
 	else
 	{
+		barreDeProgress->setMinimum(0);
+		barreDeProgress->setMaximum(0);
+		barreDeProgress->setValue(-1);
+		ligneDInformation->setText("Enregistrement du fichier strings : " + QString::fromStdString(adresseavecnom) + " échouée !");
+
 		return false;
 	}
 }
 
 bool Traduction::enregistrementArrays(string adresseavecnom, vector<string> fonctions, vector<vector<string>> trad, vector<string> notrad, bool mettrenotrad)
 {
-	ofstream fichier(adresseavecnom.c_str());
-	if (fichier)
+	barreDeProgress->setValue(0);
+	ligneDInformation->setText("Début de l'enregistrement du fichier arrays : " + QString::fromStdString(adresseavecnom));
+	ligneDInformation->setText("Enregistrement du fichier arrays : " + QString::fromStdString(adresseavecnom) + " en cours...");
+
+	QFile fichier(QString::fromStdString(adresseavecnom));
+	if (fichier.open(QIODevice::WriteOnly | QIODevice::Text))
 	{
+		barreDeProgress->setMaximum(fonctions.size());
+		QTextStream texte_sortie(&fichier);
+		texte_sortie.setCodec("UTF-8");
 		string temp;
 		bool antierreur;
-		fichier << "<?xml version=\"1.0\" encoding=\"utf-8\"?>" << endl << "<resources>" << endl;
+		texte_sortie << "<?xml version=\"1.0\" encoding=\"utf-8\"?>" << endl << "<resources>" << endl;
 		if (mettrenotrad)
 		{
+			barreDeProgress->setMaximum(fonctions.size() + notrad.size());
 			for (int i = 0; i < notrad.size(); i++)
 			{
-				fichier << notrad[i] << endl;
+				texte_sortie << QString::fromStdString(notrad[i]) << endl;
+				barreDeProgress->setValue(barreDeProgress->value() + 1);
 			}
 		}
 		for (int i = 0; i < fonctions.size(); i++)
 		{
-			fichier << "    <string-array name=\"" << fonctions[i] << "\">" << endl;
+			texte_sortie << "    <string-array name=\"" << QString::fromStdString(fonctions[i]) << "\">" << endl;
 			for (int j = 0; j < trad[i].size(); j++)
 			{
 				remplace(trad[i][j]);
-				fichier << "        <item>" << trad[i][j] << "</item>" << endl;
+				texte_sortie << "        <item>" << QString::fromStdString(trad[i][j]) << "</item>" << endl;
 			}
-			fichier << temp << "    </string-array>" << endl;
+			texte_sortie << QString::fromStdString(temp) << "    </string-array>" << endl;
+			barreDeProgress->setValue(barreDeProgress->value() + 1);
 		}
-		fichier << "</resources>";
-		fichier.close();
+		texte_sortie << "</resources>";
+
+		barreDeProgress->setMinimum(0);
+		barreDeProgress->setMaximum(0);
+		barreDeProgress->setValue(-1);
+		ligneDInformation->setText("Enregistrement du fichier arrays : " + QString::fromStdString(adresseavecnom) + " terminée.");
+
 		return true;
 	}
 	else
 	{
+		barreDeProgress->setMinimum(0);
+		barreDeProgress->setMaximum(0);
+		barreDeProgress->setValue(-1);
+		ligneDInformation->setText("Enregistrement du fichier arrays : " + QString::fromStdString(adresseavecnom) + " échouée !");
+
 		return false;
 	}
 }
@@ -763,27 +911,34 @@ int Traduction::getPosStrings()
 vector<vector<string>> Traduction::fusionArrays(QString adresseBdd1, QString adresseBdd2, QString adresseEnregistBdd, int reponse)
 {
 	int temp;
-	vector<vector<vector<string>>> bdd1;
-	bdd1 = lecture_xml_typeArrays(adresseBdd1.toStdString());
-	vector<vector<vector<string>>> bdd2;
-	bdd2 = lecture_xml_typeArrays(adresseBdd2.toStdString());
+	if (fusion_bdd1_arrays.size() == 0)
+	{
+		fusion_bdd1_arrays = lecture_xml_typeArrays(adresseBdd1.toStdString());
+		fusion_bdd2_arrays = lecture_xml_typeArrays(adresseBdd2.toStdString());
+
+		barreDeProgress->setValue(0);
+		ligneDInformation->setText("Début de la fusion des bases de données arrays.");
+		ligneDInformation->setText("Fusion des bases de données arrays en cours...");
+	}
 	vector<string> bdd1fonction, bdd2fonction;
 	vector<vector<string>> bdd1trad, bdd2trad;
 
-	if (bdd1[0][0].size() > bdd2[0][0].size())
+	if (fusion_bdd1_arrays[0][0].size() > fusion_bdd2_arrays[0][0].size())
 	{
-		bdd1fonction = bdd1[0][0];
-		bdd2fonction = bdd2[0][0];
-		bdd1trad = bdd1[1];
-		bdd2trad = bdd2[1];
+		bdd1fonction = fusion_bdd1_arrays[0][0];
+		bdd2fonction = fusion_bdd2_arrays[0][0];
+		bdd1trad = fusion_bdd1_arrays[1];
+		bdd2trad = fusion_bdd2_arrays[1];
 	}
 	else
 	{
-		bdd1fonction = bdd2[0][0];
-		bdd2fonction = bdd1[0][0];
-		bdd1trad = bdd2[1];
-		bdd2trad = bdd1[1];
+		bdd1fonction = fusion_bdd2_arrays[0][0];
+		bdd2fonction = fusion_bdd1_arrays[0][0];
+		bdd1trad = fusion_bdd2_arrays[1];
+		bdd2trad = fusion_bdd1_arrays[1];
 	}
+
+	barreDeProgress->setMaximum(bdd1fonction.size() - pos_arrays_fusion + bdd1fonction.size() + bdd2fonction.size());
 
 	for (int i = pos_arrays_fusion; i < bdd1fonction.size(); i++)
 	{
@@ -826,33 +981,45 @@ vector<vector<string>> Traduction::fusionArrays(QString adresseBdd1, QString adr
 	}
 	pos_arrays_fusion = 0;
 	enregistrementArrays(adresseEnregistBdd.toStdString(), fusion_liste_arrays_fonctions, fusion_liste_arrays_trad, liste_arrays_trad_notrad, false);
+	ligneDInformation->setText("Fusion des bases de données arrays terminée.");
+	barreDeProgress->setMinimum(0);
+	barreDeProgress->setMaximum(0);
+	barreDeProgress->setValue(-1);
+	fusion_bdd1_arrays = {{{}}};
+	fusion_bdd2_arrays = {{{}}};
 	return{ {"FFIINN"} };
 }
 
 vector<string> Traduction::fusionStrings(QString adresseBdd1, QString adresseBdd2, QString adresseEnregistBdd, int reponse)
 {
 	int temp;
-	vector<vector<string>> bdd1;
-	bdd1 = lecture_xml_typeStrings(adresseBdd1.toStdString());
-	vector<vector<string>> bdd2;
-	bdd2 = lecture_xml_typeStrings(adresseBdd2.toStdString());
+	if (fusion_bdd1_strings.size() == 0)
+	{
+		fusion_bdd1_strings = lecture_xml_typeStrings(adresseBdd1.toStdString());
+		fusion_bdd1_strings = lecture_xml_typeStrings(adresseBdd2.toStdString());
 
+		barreDeProgress->setValue(0);
+		ligneDInformation->setText("Début de la fusion des bases de données strings.");
+		ligneDInformation->setText("Fusion des bases de données strings en cours...");
+	}
 	vector<string> bdd1fonction, bdd2fonction, bdd1trad, bdd2trad;
 
-	if (bdd1[0][0].size() > bdd2[0][0].size())
+	if (fusion_bdd1_strings[0][0].size() > fusion_bdd2_strings[0][0].size())
 	{
-		bdd1fonction = bdd1[0];
-		bdd2fonction = bdd2[0];
-		bdd1trad = bdd1[1];
-		bdd2trad = bdd2[1];
+		bdd1fonction = fusion_bdd1_strings[0];
+		bdd2fonction = fusion_bdd2_strings[0];
+		bdd1trad = fusion_bdd1_strings[1];
+		bdd2trad = fusion_bdd2_strings[1];
 	}
 	else
 	{
-		bdd1fonction = bdd2[0];
-		bdd2fonction = bdd1[0];
-		bdd1trad = bdd2[1];
-		bdd2trad = bdd1[1];
+		bdd1fonction = fusion_bdd2_strings[0];
+		bdd2fonction = fusion_bdd1_strings[0];
+		bdd1trad = fusion_bdd2_strings[1];
+		bdd2trad = fusion_bdd1_strings[1];
 	}
+
+	barreDeProgress->setMaximum(bdd1fonction.size() - pos_arrays_fusion + bdd1fonction.size() + bdd2fonction.size());
 
 	for (int i = pos_strings_fusion; i < bdd1fonction.size(); i++)
 	{
@@ -895,6 +1062,12 @@ vector<string> Traduction::fusionStrings(QString adresseBdd1, QString adresseBdd
 	}
 	pos_strings_fusion = 0;
 	enregistrementStrings(adresseEnregistBdd.toStdString(), fusion_liste_strings_fonctions, fusion_liste_strings_trad, {}, false);
+	barreDeProgress->setMinimum(0);
+	barreDeProgress->setMaximum(0);
+	barreDeProgress->setValue(-1);
+	ligneDInformation->setText("Fusion des bases de données strings terminée.");
+	fusion_bdd1_strings = { { {} } };
+	fusion_bdd2_strings = { { {} } };
 	return{ "FFIINN" };
 }
 
@@ -904,4 +1077,14 @@ void Traduction::setNomAppli(string nom, string langue1)
 	adresse_bdd_arrays = "bdd/" + nom + "_" + langue1 + "_arrays.xml";
 	nom_appli = nom;
 	langue = langue1;
+}
+
+void Traduction::setControleInterface(QProgressBar *barre, QLabel *info)
+{
+	barreDeProgress = barre;
+	barreDeProgress->setMinimum(0);
+	barreDeProgress->setMaximum(0);
+	barreDeProgress->setValue(-1);
+	ligneDInformation = info;
+	ligneDInformation->setText("Bienvenue sur AllTrad ! | En attente de l'utilisateur...");
 }
