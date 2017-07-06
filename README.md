@@ -5,6 +5,41 @@ Développé avec Qt 5.8.
 
 ## Changelog :
 
+### v1.2
+
+Ajout du raccourci entrer pour valider la traduction.
+
+Mise à jour des bases de données Venom.
+
+Mise à jour des filtres VenomHUB.
+
+Amélioration de l'algorithme de filtre arrays.
+
+Mise à jour de l'algorithmes de lecture pour revenir sur les lignes precedantes (strings).
+
+Algorithme de lecture arrays mis à jour pour correspondre à l'algorithme de lecture strings.
+
+J'en profite pour modifier la méthode de lecture les fichiers pour enlever la limitation avec les adresses avec des accents !
+
+Du coup adaptation du code autour (pour la verification des adresses notamment).
+
+Un peu de rangement dans le code des algos de lecture !
+
+Optimisation du code pour l'ouverture des apks (plus rapide).
+
+Barre de progression ajoutée !
+
+Message d'erreur mis à jour pour enlever le conseil sur les accents dans les adresses.
+
+Affichage de la progression dans la traduction ajouté.
+
+Progression de la fusion de bases de données ajoutée.
+
+Résolution d'un bug de codec qui corrompait les fichiers.
+
+Mise à jour des filtres VenomTweaks.
+
+
 ### v1.1
 
 Mise en place des vector notrad pour strings.xml (déjà mis en place pour les arrays). Adaptation du code.
